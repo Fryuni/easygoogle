@@ -6,7 +6,7 @@ setup(
             'easygoogle': ['apis.pk']
             },
         license = "GNU General Public License v3.0",
-        version = '0.1.3',
+        version = '0.1.4',
         description = "Easy to use wrapper to google APIs",
         author = "Luiz Augusto Ferraz",
         author_email = "adm.fryuni@gmail.com",
