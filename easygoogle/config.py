@@ -1,10 +1,13 @@
 from pickle import load, dump
 from os.path import dirname, join
+import logging
 from re import compile as rExcompile, findall
 from urllib.request import Request as req, urlopen as uopen
 
 with open(join(dirname(__file__), 'apis.pk'), 'rb') as fl:
 	apis = load(fl)
+
+logger = logging.getLogger("easygoogle.configurator")
 
 def config():
     prevnames = {y['scope']:x for x, y in apis.items()}
@@ -13,7 +16,7 @@ def config():
                       headers={'User-Agent': 'easyGoogle python api configurator'}))
     findings = findall(r"<td>(.+?)<\/td>\s+?<td>(.+?)<\/td>\s+?<td><a href=\"https:\/\/developers.google.com\/api-client-library.+?\">(.+?)<\/a><\/td>", pgdata.read().decode())
     
-    print("Found %d" % len(findings))
+    logger.debug("Found %d" % len(findings))
     
     python_confirmed = {(x[0], x[2]):x for x in findings}
     
@@ -27,9 +30,9 @@ def config():
         line = pgdata.readline().decode()
         match_header = rx_header.match(line)
         if match_header:
-            print("Header found: %s --> %s" % match_header.group(1, 2))
+            logger.debug("Header found: %s --> %s" % match_header.group(1, 2))
             if match_header.group(1, 2) in python_confirmed:
-                print("Header in valid")
+                logger.debug("Header is valid")
                 while True:
                     line = pgdata.readline().decode()
                     if line == "</table>\n":
@@ -40,20 +43,18 @@ def config():
                         setapiinfo(python_confirmed[match_header.group(1, 2)],
                                    match_scope.group(1),
                                    prevnames)
+
+    with open('apis.pk', 'wb') as fl:
+        dump(apis, fl)
                         
 def setapiinfo(info, scope, prevconfig):
     scopecode = scope.split('/')[-1]
-    print(scope)
     if scope in prevconfig:
         name = prevconfig[scope]
     else:
         name = scopecode
     
-    print("Configuring scope \"%s\" for \"%s\"...\n Insert a reference for it or leave blank to use \"%s\":" % (scopecode, info[0], name))
-    got_name = "" #input("--> ")
-    
-    if not got_name == "":
-        name = got_name
+    logger.info("Configuring scope \"%s\" for \"%s\"..." % (scopecode, info[0]))
     
     apis[name] = {'name': info[1],
                   'version': info[2],
@@ -61,4 +62,7 @@ def setapiinfo(info, scope, prevconfig):
 
 
 if __name__=="__main__":
-	config()
+    import coloredlogs
+    logging.basicConfig(level=logging.INFO, format="[%(name)-20s][%(levelname)-8s]:%(asctime)s: %(message)s")
+    coloredlogs.install(level=logging.INFO)
+    config()
