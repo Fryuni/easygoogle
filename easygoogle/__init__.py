@@ -26,7 +26,7 @@ class oauth2:
         self.credential_path = os.path.join(self.credential_dir, self.filename)
         
         store = Storage(self.credential_path)
-        credentials = store.get()
+        credentials = store.locked_get()
         if not credentials or credentials.invalid:
             flow = client.flow_from_clientsecrets(secret_json, list(set((x['scope'] for x in self.apis.values()))))
             flow.user_agent = self.name
@@ -56,7 +56,7 @@ class oauth2:
         self.apis = apiset
     
     def get_api(self, api):
-        res = build(self.apis[api]['name'], self.apis[api]['version'], http=self.http_auth)
+        res = build(self.apis[api]['name'], self.apis[api]['version'], http=self.http_auth, cache_discovery=False)
         logger.info("%s API Generated" % api)
         return res
 
