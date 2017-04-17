@@ -4,7 +4,7 @@ setup(
         packages = ["easygoogle"],
         license = "https://github.com/Fryuni/easy_google/blob/master/LICENSE",
         version = '0.1beta1',
-        description = "Easy to ese wrapper to google APIs",
+        description = "Easy to use wrapper to google APIs",
         author = "Luiz Augusto Ferraz",
         author_email = "adm.fryuni@gmail.com",
         requires = ["googleapipythonclient (>=1.6.2)"],
