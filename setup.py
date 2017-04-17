@@ -1,12 +1,14 @@
-from distutils.ore import setup
+from distutils.core import setup
 setup(
-        name = "easy_google",
-        packages = ["easy_google"],
+        name = "easygoogle",
+        packages = ["easygoogle"],
+        license = "https://github.com/Fryuni/easy_google/blob/master/LICENSE",
         version = '0.1beta1',
         description = "Easy to ese wrapper to google APIs",
         author = "Luiz Augusto Ferraz",
         author_email = "adm.fryuni@gmail.com",
+        requires = ["googleapipythonclient (>=1.6.2)"],
         url = "https://github.com/Fryuni/easy_google/archive/0.1beta1.tar.gz",
-        keyword = ['google', 'apis', 'google-apis'],
+        keywords = ['google', 'apis', 'google-apis'],
         classifiers = []
         )
