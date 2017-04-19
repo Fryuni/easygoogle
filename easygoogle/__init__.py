@@ -49,14 +49,17 @@ class oauth2:
         self.manual_scopes = list()
         for x in list(set(scopes)):
             if isinstance(x, (list, tuple)):
+                logger.debug("Adding scope manually:\n%s" % x)
                 self.manual_scopes += x
             try:
                 apiset[x] = (apisDict[x])
             except KeyError:
-                print("[!] API %s not registered" % x)
+                logger.warning("[!] API %s not registered" % x)
             except Exception as e:
                 logger.error(e)
                 raise e
+            else:
+                logger.debug("Loaded auth: %s --> api: %s, %s" % (x, self.apis[x]['name'], self.apis[x]['version']))
         logger.info("Apis imported")
 
         self.apis = apiset
