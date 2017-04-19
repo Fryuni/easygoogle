@@ -10,6 +10,9 @@ from argparse import ArgumentParser
 
 logger = logging.getLogger(__name__)
 flags = ArgumentParser(parents=[tools.argparser]).parse_args()
+if not os.path.isfile(os.path.join(os.path.dirname(__file__), 'apis.pk')):
+    from config import config as cfg
+    cfg()
 with open(os.path.join(os.path.dirname(__file__), 'apis.pk'), 'rb') as fl:
     apisDict = load(fl)
 

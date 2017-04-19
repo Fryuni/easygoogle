@@ -4,9 +4,6 @@ import logging
 from re import compile as rExcompile, findall
 from urllib.request import Request as req, urlopen as uopen
 
-with open(join(dirname(__file__), 'apis.pk'), 'rb') as fl:
-	apis = load(fl)
-
 logger = logging.getLogger("easygoogle.configurator")
 
 def config():
@@ -48,11 +45,7 @@ def config():
         dump(apis, fl)
                         
 def setapiinfo(info, scope, prevconfig):
-    scopecode = scope.split('/')[-1]
-    if scope in prevconfig:
-        name = prevconfig[scope]
-    else:
-        name = scopecode
+    name = scope.split('/')[-1]
     
     logger.info("Configuring scope \"%s\" for \"%s\"..." % (scopecode, info[0]))
     

@@ -2,15 +2,12 @@ from setuptools import setup
 setup(
         name = "easygoogle",
         packages = ["easygoogle"],
-        package_data = {
-            'easygoogle': ['apis.pk']
-            },
         license = "GNU General Public License v3.0",
-        version = '0.1.4',
+        version = '0.1.6',
         description = "Easy to use wrapper to google APIs",
         author = "Luiz Augusto Ferraz",
         author_email = "adm.fryuni@gmail.com",
-        install_requires = ["google-api-python-client (~=1.6.2)",
+        install_requires = ["google-api-python-client (>=1.6.2)",
             "coloredLogs"],
         url = "https://github.com/Fryuni/easy_google",
         keywords = "google apis google-apis",
