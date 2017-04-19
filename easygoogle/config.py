@@ -5,10 +5,8 @@ from re import compile as rExcompile, findall
 from urllib.request import Request as req, urlopen as uopen
 
 logger = logging.getLogger("easygoogle.configurator")
-
+apis = dict()
 def config():
-    prevnames = {y['scope']:x for x, y in apis.items()}
-    
     pgdata =uopen(req('https://developers.google.com/api-client-library/python/apis/',
                       headers={'User-Agent': 'easyGoogle python api configurator'}))
     findings = findall(r"<td>(.+?)<\/td>\s+?<td>(.+?)<\/td>\s+?<td><a href=\"https:\/\/developers.google.com\/api-client-library.+?\">(.+?)<\/a><\/td>", pgdata.read().decode())
@@ -38,16 +36,15 @@ def config():
                     match_scope = rx_scope.match(line)
                     if match_scope:
                         setapiinfo(python_confirmed[match_header.group(1, 2)],
-                                   match_scope.group(1),
-                                   prevnames)
+                                   match_scope.group(1))
 
     with open('apis.pk', 'wb') as fl:
         dump(apis, fl)
                         
-def setapiinfo(info, scope, prevconfig):
+def setapiinfo(info, scope):
     name = scope.split('/')[-1]
     
-    logger.info("Configuring scope \"%s\" for \"%s\"..." % (scopecode, info[0]))
+    logger.info("Configuring scope \"%s\" for \"%s\"..." % (name, info[0]))
     
     apis[name] = {'name': info[1],
                   'version': info[2],
