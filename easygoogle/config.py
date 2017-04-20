@@ -38,7 +38,7 @@ def config():
                         setapiinfo(python_confirmed[match_header.group(1, 2)],
                                    match_scope.group(1))
 
-    with open('apis.pk', 'wb') as fl:
+    with open(join(dirname(__file__), 'apis.pk'), 'wb') as fl:
         dump(apis, fl)
                         
 def setapiinfo(info, scope):
