@@ -9,7 +9,7 @@ from pickle import load
 from argparse import ArgumentParser
 
 logger = logging.getLogger(__name__)
-flags = ArgumentParser(parents=[tools.argparser]).parse_args()
+argparser = ArgumentParser(parents=[tools.argparser])
 if not os.path.isfile(os.path.join(os.path.dirname(__file__), 'apis.pk')):
     import easygoogle.config as cfg
     cfg.config()
@@ -17,7 +17,7 @@ with open(os.path.join(os.path.dirname(__file__), 'apis.pk'), 'rb') as fl:
     apisDict = load(fl)
 
 class oauth2:
-    def __init__(self, appname, secret_json, scopes, app_dir='.', *args, **kwargs):
+    def __init__(self, appname, secret_json, scopes, user="", app_dir='.', *args, **kwargs):
         self._loadApiNames(scopes)
         
         home_dir = os.path.abspath(app_dir)
@@ -25,7 +25,7 @@ class oauth2:
         os.makedirs(self.credential_dir, exist_ok=True)
         
         self.name = appname
-        self.filename = ''.join(map(chr, (x for x in self.name.encode() if x < 128))).lower().replace(' ', '_') + ".json"
+        self.filename = ''.join(map(chr, (x for x in self.name.encode() if x < 128))).lower().replace(' ', '_') + user + ".json"
         self.credential_path = os.path.join(self.credential_dir, self.filename)
         
         store = Storage(self.credential_path)
@@ -33,6 +33,7 @@ class oauth2:
         if not credentials or credentials.invalid:
             flow = client.flow_from_clientsecrets(secret_json, list(set([x['scope'] for x in self.apis.values()])))
             flow.user_agent = self.name
+            flags = argparser.parse_args()
             credentials = tools.run_flow(flow, store, flags)
             logger.info("Storing credentials to %s" % self.credential_path)
         logger.info("Credentials acquired")
