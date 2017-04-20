@@ -57,7 +57,7 @@ class oauth2:
 
         self.apis = apiset
         self.valid_apis = dict()
-        for a in self.apis:
+        for a in self.apis.values():
             for b in a['apis']:
                 self.valid_apis[b['name']] = b['version']
     

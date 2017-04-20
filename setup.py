@@ -3,7 +3,7 @@ setup(
         name = "easygoogle",
         packages = ["easygoogle"],
         license = "GNU General Public License v3.0",
-        version = '0.3.4',
+        version = '0.3.5',
         description = "Easy to use wrapper to google APIs",
         author = "Luiz Augusto Ferraz",
         author_email = "adm.fryuni@gmail.com",
