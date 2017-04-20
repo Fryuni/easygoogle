@@ -46,9 +46,10 @@ def setapiinfo(info, scope):
     
     logger.info("Configuring scope \"%s\" for \"%s\"..." % (name, info[0]))
     
-    apis[name] = {'name': info[1],
-                  'version': info[2],
-                  'scope': scope}
+    if name in apis:
+        apis[name]['apis'].append({'name': info[1], 'version': info[2], 'scope': scope})
+    else:
+        apis[name] = {'apis': [{'name': info[1], 'version': info[2]}], 'scope': scope}
 
 
 if __name__=="__main__":

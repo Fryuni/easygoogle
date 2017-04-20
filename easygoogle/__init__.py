@@ -31,43 +31,43 @@ class oauth2:
         store = Storage(self.credential_path)
         credentials = store.locked_get()
         if not credentials or credentials.invalid:
-            flow = client.flow_from_clientsecrets(secret_json, list(set([x['scope'] for x in self.apis.values()]+self.manual_scopes)))
+            flow = client.flow_from_clientsecrets(secret_json, list(set([x['scope'] for x in self.apis.values()])))
             flow.user_agent = self.name
             credentials = tools.run_flow(flow, store, flags)
             logger.info("Storing credentials to %s" % self.credential_path)
         logger.info("Credentials acquired")
         self.credentials = credentials
-        
-        
-        self.apis['script'] = {'name': 'script', 'version': 'v1'}
-        
+                
         self.http_auth = self.credentials.authorize(Http())
         logger.info("Authorization acquired")
 
     def _loadApiNames(self, scopes):
         apiset = dict()
-        self.manual_scopes = list()
         for x in list(set(scopes)):
-            if isinstance(x, (list, tuple)):
-                logger.debug("Adding scope manually:\n%s" % x)
-                self.manual_scopes += x
             try:
-                apiset[x] = (apisDict[x])
+                apiset[x] = apisDict[x]
             except KeyError:
                 logger.warning("[!] API %s not registered" % x)
             except Exception as e:
                 logger.error(e)
                 raise e
             else:
-                logger.debug("Loaded auth: %s --> api: %s, %s" % (x, apiset[x]['name'], apiset[x]['version']))
+                logger.debug("Loaded auth: %s --> api: %s" % (x, ', '.join(("%s, %s" % (a['name'], a['version']) for a in apiset[x]['apis']))))
         logger.info("Apis imported")
 
         self.apis = apiset
+        self.valid_apis = dict()
+        for a in self.apis:
+            for b in a['apis']:
+                self.valid_apis[b['name']] = b['version']
     
     def get_api(self, api):
-        res = build(self.apis[api]['name'], self.apis[api]['version'], http=self.http_auth, cache_discovery=False)
-        logger.info("%s API Generated" % api)
-        return res
+        if api in self.valid_apis:
+            res = build(api, self.valid_apis[api], http=self.http_auth, cache_discovery=False)
+            logger.info("%s API Generated" % api)
+            return res
+        else:
+            logger.warning("%s is not a valid API" % api)
 
 
 class service_acc(oauth2):
