@@ -11,14 +11,14 @@ def config():
                       headers={'User-Agent': 'easyGoogle python api configurator'}))
     findings = findall(r"<td>(.+?)<\/td>\s+?<td>(.+?)<\/td>\s+?<td><a href=\"https:\/\/developers.google.com\/api-client-library.+?\">(.+?)<\/a><\/td>", pgdata.read().decode())
     
-    logger.debug("Found %d" % len(findings))
+    logger.debug('\n'.join(("Found %s" % x for x in findings)))
     
     python_confirmed = {(x[0], x[2]):x for x in findings}
     
     pgdata = uopen(req('https://developers.google.com/identity/protocols/googlescopes',
                        headers={'User-Agent': 'easyGoogle python api configurator'}))
     
-    rx_header = rExcompile("\\s*<h2.*?<a href=.*?\">(.+? API)</a>, (v.+?)</h2>")
+    rx_header = rExcompile("\\s*<h2.*?<a href=.*?\">(.+? API)</a>, (.+?)</h2>")
     rx_scope = rExcompile("\\s*<tr><td>(.+?)</td>")
     
     while pgdata.length > 0:
