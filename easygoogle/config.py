@@ -11,7 +11,7 @@ def config():
                       headers={'User-Agent': 'easyGoogle python api configurator'}))
     findings = findall(r"<td>(.+?)<\/td>\s+?<td>(.+?)<\/td>\s+?<td><a href=\"https:\/\/developers.google.com\/api-client-library.+?\">(.+?)<\/a><\/td>", pgdata.read().decode())
     
-    logger.debug('\n'.join(("Found %s" % x for x in findings)))
+    logger.debug('\n'.join(("Found %s" % str(x) for x in findings)))
     
     python_confirmed = {(x[0], x[2]):x for x in findings}
     
