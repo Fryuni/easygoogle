@@ -86,7 +86,7 @@ class service_acc(oauth2):
 
     def delegate(self, user):
         if self.domWide:
-            res = delegated(self.credentials.create_delegated(user), self.apis)
+            res = delegated(self.credentials.create_delegated(user), self.valid_apis)
             logger.info("Created delegated credentials")
             return res
         else:
@@ -96,7 +96,7 @@ class service_acc(oauth2):
 
 class delegated(service_acc):
     def __init__(self, dCredentials, apis):
-        self.apis = apis
+        self.valid_apis = apis
         self.dowWide = False
         self.credentials = dCredentials
         self.http_auth = self.credentials.authorize(Http())
