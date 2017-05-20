@@ -12,34 +12,39 @@ logger = logging.getLogger(__name__)
 argparser = ArgumentParser(parents=[tools.argparser], add_help=False)
 if not os.path.isfile(os.path.join(os.path.dirname(__file__), 'apis.pk')):
     import easygoogle.config as cfg
+
     cfg.config()
 with open(os.path.join(os.path.dirname(__file__), 'apis.pk'), 'rb') as fl:
     apisDict = load(fl)
 
+
 class oauth2:
-    def __init__(self, appname, secret_json, scopes, user="", app_dir='.', flags=None, manualScopes=[], *args, **kwargs):
+    def __init__(self, appname, secret_json, scopes, user="", app_dir='.', flags=None, manualScopes=[], *args,
+                 **kwargs):
         self._loadApiNames(scopes)
-        
+        self.SCOPES = list(set([x['scope'] for x in self.apis.values()] + manualScopes))
+
         home_dir = os.path.abspath(app_dir)
         self.credential_dir = os.path.join(home_dir, '.credentials')
         os.makedirs(self.credential_dir, exist_ok=True)
-        
+
         self.name = appname
-        self.filename = ''.join(map(chr, (x for x in self.name.encode() if x < 128))).lower().replace(' ', '_') + user + ".json"
+        self.filename = ''.join(map(chr, (x for x in self.name.encode() if x < 128))).lower().replace(' ',
+                                                                                                      '_') + user + ".json"
         self.credential_path = os.path.join(self.credential_dir, self.filename)
-        
+
         store = Storage(self.credential_path)
         credentials = store.locked_get()
         if not credentials or credentials.invalid:
-            flow = client.flow_from_clientsecrets(secret_json, list(set([x['scope'] for x in self.apis.values()]+manualScopes)))
+            flow = client.flow_from_clientsecrets(secret_json, self.SCOPES)
             flow.user_agent = self.name
-            if flags==None:
+            if flags == None:
                 flags = argparser.parse_args()
             credentials = tools.run_flow(flow, store, flags)
             logger.info("Storing credentials to %s" % self.credential_path)
         logger.info("Credentials acquired")
         self.credentials = credentials
-                
+
         self.http_auth = self.credentials.authorize(Http())
         logger.info("Authorization acquired")
 
@@ -54,18 +59,21 @@ class oauth2:
                 logger.error(e)
                 raise e
             else:
-                logger.debug("Loaded auth: %s --> api: %s" % (x, ', '.join(("%s, %s" % (a['name'], a['version']) for a in apiset[x]['apis']))))
+                logger.debug("Loaded auth: %s --> api: %s" % (
+                    x, ', '.join(("%s, %s" % (a['name'], a['version']) for a in apiset[x]['apis']))))
         logger.info("Apis imported")
 
         self.apis = apiset
         self.valid_apis = dict()
         for a in self.apis.values():
             for b in a['apis']:
-                self.valid_apis[b['name']] = b['version']
-    
+                suffix = b['version'].split('_v')
+                suffix = "_" + suffix[0] if len(suffix) > 1 else ""
+                self.valid_apis[b['name'] + suffix] = (b['name'], b['version'])
+
     def get_api(self, api):
         if api in self.valid_apis:
-            res = build(api, self.valid_apis[api], http=self.http_auth, cache_discovery=False)
+            res = build(self.valid_apis[api][0], self.valid_apis[api][1], http=self.http_auth, cache_discovery=False)
             logger.info("%s API Generated" % api)
             return res
         else:
@@ -73,14 +81,14 @@ class oauth2:
 
 
 class service_acc(oauth2):
-    def __init__(self, jsonfile, scopes, domainWide=False, *args, **kwargs):
-
+    def __init__(self, jsonfile, scopes, manualScopes=[], domainWide=False, *args, **kwargs):
         self._loadApiNames(scopes)
+        self.SCOPES = list(set([x['scope'] for x in self.apis.values()] + manualScopes))
         self.domWide = domainWide
-        
-        self.credentials = ServiceAccountCredentials.from_json_keyfile_name(jsonfile, scopes=list(set([x['scope'] for x in self.apis.values()])))
+
+        self.credentials = ServiceAccountCredentials.from_json_keyfile_name(jsonfile, scopes=self.SCOPES)
         logger.info("Credentials acquired")
-        
+
         self.http_auth = self.credentials.authorize(Http())
         logger.info("Authorization acquired")
 
