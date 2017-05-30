@@ -61,11 +61,13 @@ class oauth2:
         self.valid_apis = dict()
         for a in self.apis.values():
             for b in a['apis']:
-                self.valid_apis[b['name']] = b['version']
+                suffix = b['version'].split('_v')
+                suffix = "_"+suffix[0] if len(suffix) > 1 else ""
+                self.valid_apis[b['name']+suffix] = (b['name'], b['version'])
     
     def get_api(self, api):
         if api in self.valid_apis:
-            res = build(api, self.valid_apis[api], http=self.http_auth, cache_discovery=False)
+            res = build(self.valid_apis[api][0], self.valid_apis[api][1], http=self.http_auth, cache_discovery=False)
             logger.info("%s API Generated" % api)
             return res
         else:
