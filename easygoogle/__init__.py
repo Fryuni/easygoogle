@@ -87,10 +87,10 @@ class service_acc(oauth2):
         self.domWide = domainWide
 
         self.credentials = ServiceAccountCredentials.from_json_keyfile_name(jsonfile, scopes=self.SCOPES)
-        logger.info("Credentials acquired")
+        logger.debug("Credentials acquired")
 
         self.http_auth = self.credentials.authorize(Http())
-        logger.info("Authorization acquired")
+        logger.debug("Authorization acquired")
 
     def delegate(self, user):
         if self.domWide:
@@ -102,9 +102,8 @@ class service_acc(oauth2):
             return self
 
 
-class delegated(service_acc):
+class delegated(oauth2):
     def __init__(self, dCredentials, apis):
         self.valid_apis = apis
-        self.dowWide = False
         self.credentials = dCredentials
         self.http_auth = self.credentials.authorize(Http())
