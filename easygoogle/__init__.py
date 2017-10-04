@@ -1,12 +1,14 @@
+import logging
+import os
+from argparse import ArgumentParser
+from pickle import load
+from sys import argv
+
+from apiclient.discovery import build
+from httplib2 import Http
 from oauth2client import client, tools
 from oauth2client.file import Storage
 from oauth2client.service_account import ServiceAccountCredentials
-from httplib2 import Http
-from apiclient.discovery import build
-import os, logging
-from sys import argv
-from pickle import load
-from argparse import ArgumentParser
 
 logger = logging.getLogger(__name__)
 argparser = ArgumentParser(parents=[tools.argparser], add_help=False)
@@ -19,10 +21,11 @@ with open(os.path.join(os.path.dirname(__file__), 'apis.pk'), 'rb') as fl:
 
 
 class oauth2:
-    def __init__(self, appname, secret_json, scopes, user="", app_dir='.', flags=None, manualScopes=[], *args,
+    def __init__(self, secret_json, scopes, appname='Google Client Library - Python', user="", app_dir='.', flags=None, manualScopes=[], *args,
                  **kwargs):
         self._loadApiNames(scopes)
-        self.SCOPES = list(set([x['scope'] for x in self.apis.values()] + manualScopes))
+        self.SCOPES = list(set([x['scope']
+                                for x in self.apis.values()] + manualScopes))
 
         home_dir = os.path.abspath(app_dir)
         self.credential_dir = os.path.join(home_dir, '.credentials')
@@ -39,7 +42,7 @@ class oauth2:
             flow = client.flow_from_clientsecrets(secret_json, self.SCOPES)
             flow.user_agent = self.name
             if flags == None:
-                flags = argparser.parse_args()
+                flags = argparser.parse_args([])
             credentials = tools.run_flow(flow, store, flags)
             logger.info("Storing credentials to %s" % self.credential_path)
         logger.info("Credentials acquired")
@@ -73,7 +76,8 @@ class oauth2:
 
     def get_api(self, api):
         if api in self.valid_apis:
-            res = build(self.valid_apis[api][0], self.valid_apis[api][1], http=self.http_auth, cache_discovery=False)
+            res = build(self.valid_apis[api][0], self.valid_apis[api]
+                        [1], http=self.http_auth, cache_discovery=False)
             logger.info("%s API Generated" % api)
             return res
         else:
@@ -83,10 +87,12 @@ class oauth2:
 class service_acc(oauth2):
     def __init__(self, jsonfile, scopes, manualScopes=[], domainWide=False, *args, **kwargs):
         self._loadApiNames(scopes)
-        self.SCOPES = list(set([x['scope'] for x in self.apis.values()] + manualScopes))
+        self.SCOPES = list(set([x['scope']
+                                for x in self.apis.values()] + manualScopes))
         self.domWide = domainWide
 
-        self.credentials = ServiceAccountCredentials.from_json_keyfile_name(jsonfile, scopes=self.SCOPES)
+        self.credentials = ServiceAccountCredentials.from_json_keyfile_name(
+            jsonfile, scopes=self.SCOPES)
         logger.debug("Credentials acquired")
 
         self.http_auth = self.credentials.authorize(Http())
@@ -94,7 +100,8 @@ class service_acc(oauth2):
 
     def delegate(self, user):
         if self.domWide:
-            res = delegated(self.credentials.create_delegated(user), self.valid_apis)
+            res = delegated(self.credentials.create_delegated(
+                user), self.valid_apis)
             logger.info("Created delegated credentials")
             return res
         else:
