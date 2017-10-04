@@ -10,6 +10,7 @@ setup(
     author_email="adm.fryuni@gmail.com",
     install_requires=["google-api-python-client (>=1.6.2)"],
     url="https://github.com/Fryuni/easy_google",
+    download_url='https://github.com/Fryuni/easy_google/archive/1.0.1.tar.gz',
     keywords="google apis google-apis",
     classifiers=["Development Status :: 5 - Production/Stable",
                  "Intended Audience :: Developers",
