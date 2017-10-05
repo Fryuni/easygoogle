@@ -12,10 +12,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 
 logger = logging.getLogger(__name__)
 argparser = ArgumentParser(parents=[tools.argparser], add_help=False)
-if not os.path.isfile(os.path.join(os.path.dirname(__file__), 'apis.pk')):
-    import easygoogle.config as cfg
 
-    cfg.config()
 with open(os.path.join(os.path.dirname(__file__), 'apis.pk'), 'rb') as fl:
     apisDict = load(fl)
 
