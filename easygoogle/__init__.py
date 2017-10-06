@@ -84,6 +84,47 @@ class oauth2(_api_builder):
         logger.info("Authorization acquired")
 
 
+class oauth2_manual(_api_builder):
+
+    def __init__(self, secret_json, scopes, redirectUrl=None, manualScopes=[], login_hint=None):
+        self._loadApiNames(scopes)
+        self.SCOPES = list(set([x['scope']
+                                for x in self.apis.values()] + manualScopes))
+
+        if redirectUrl is None:
+            redirectUrl = "urn:ietf:wg:oauth:2.0:oob"
+
+        logger.info("Instantiated flow")
+        self._flow = client.flow_from_clientsecrets(secret_json, self.SCOPES, redirect_uri=redirectUrl,
+                                                    message="OAuth secret file not found at '{}'".format(
+                                                        os.path.abspath(secret_json)),
+                                                    login_hint=login_hint)
+        self._device_info = None
+
+    def get_login_url(self, state=None):
+        return self._flow.step1_get_authorize_url(state=state)
+
+    def get_device_auth(self):
+        if self._device_info is None:
+            self._device_info = self._flow.step1_get_device_and_user_codes()
+
+        return self._device_info
+
+    def apply_login_token(self, token):
+        credentials = self._flow.step2_exchange(code=token)
+        self._apply_credentials(credentials)
+
+    def apply_as_device(self):
+        credentials = self._flow.step2_exchange(
+            device_flow_info=self._device_info)
+        self._apply_credentials(credentials)
+
+    def _apply_credentials(self, credentials):
+        self.credentials = credentials
+        self.http_auth = self.credentials.authorize(Http())
+        logger.info("Authorization acquired")
+
+
 class service_acc(_api_builder):
     def __init__(self, jsonfile, scopes, manualScopes=[], domainWide=False, *args, **kwargs):
         self._loadApiNames(scopes)
