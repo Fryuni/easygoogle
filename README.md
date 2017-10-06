@@ -1,6 +1,7 @@
 # Easy Google APIs
 _Google APIs python library wrapepr_
 
+### **WARNING - This documentation is about the 1.0 tag. The master branch is ahead of this README file**
 Python package to make Google APIs more practical and easy to use
 
 Supports OAuth authentication and [service accounts](https://developers.google.com/identity/protocols/OAuth2ServiceAccount) (directly and with [domain wide delegation](https://developers.google.com/identity/protocols/OAuth2ServiceAccount#delegatingauthority))
