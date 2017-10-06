@@ -13,42 +13,71 @@ from oauth2client.service_account import ServiceAccountCredentials
 logger = logging.getLogger(__name__)
 argparser = ArgumentParser(parents=[tools.argparser], add_help=False)
 
+# Load APIs versions, identifiers and scopes relations
+# from pickle file
 with open(os.path.join(os.path.dirname(__file__), 'apis.pk'), 'rb') as fl:
     apisDict = load(fl)
 
 
+# Base class, loads API information and build the connectors with the credentials
 class _api_builder:
+
+    # Internal function to load all avaiable APIs based on the scopes
     def _loadApiNames(self, scopes):
+
+        # Create a new dictionary to hold the information
         apiset = dict()
+
+        # Iterates through every unique scopes
         for x in list(set(scopes)):
             try:
+                # Load scope relations descriptor
                 apiset[x] = apisDict[x]
             except KeyError:
-                logger.warning("[!] API %s not registered" % x)
+                # Log when scope not found
+                logger.warning("[!] SCOPE %s not registered" % x)
             except Exception as e:
+                # When unexpected error is cought, log and raise RuntimeError
                 logger.error(e)
-                raise e
+                raise RuntimeError from e
             else:
+                # On success log the unlocked APIs
                 logger.debug("Loaded auth: %s --> api: %s" % (
                     x, ', '.join(("%s, %s" % (a['name'], a['version']) for a in apiset[x]['apis']))))
         logger.info("Apis imported")
 
+        # Save the raw apiset
         self.apis = apiset
+        # Instantiated a new dictionary create usable control
         self.valid_apis = dict()
+
+        # Iterates through every scope descriptor unlocked
         for a in self.apis.values():
+
+            # Iterates through all APIs described in the scope relations descriptor
             for b in a['apis']:
+                # Process suffix when there are subidentifier in version
                 suffix = b['version'].split('_v')
                 suffix = "_" + suffix[0] if len(suffix) > 1 else ""
                 self.valid_apis[b['name'] + suffix] = (b['name'], b['version'])
 
+    # Function to build connector based on API identifiers
     def get_api(self, api):
-        if api in self.valid_apis:
-            res = build(self.valid_apis[api][0], self.valid_apis[api]
-                        [1], http=self.http_auth, cache_discovery=False)
-            logger.info("%s API Generated" % api)
-            return res
+
+        # Raises error if object is built ditectly as '_api_builder'
+        if type(self) is not _api_builder and isinstance(_api_builder):
+            # Build connector if API identifier is valid
+            if api in self.valid_apis:
+                res = build(self.valid_apis[api][0], self.valid_apis[api]
+                            [1], http=self.http_auth)
+                logger.info("%s API Generated" % api)
+                return res
+            else:
+                logger.warning("%s is not a valid API" % api)
+                raise ValueError("Invalid API identifier")
         else:
-            logger.warning("%s is not a valid API" % api)
+            raise TypeError(
+                "The class '_api_builder' should not be instantiated\nIt should be inherited by other class that implements a valid self.http_auth.")
 
 
 class oauth2(_api_builder):
