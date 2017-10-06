@@ -17,37 +17,7 @@ with open(os.path.join(os.path.dirname(__file__), 'apis.pk'), 'rb') as fl:
     apisDict = load(fl)
 
 
-class oauth2:
-    def __init__(self, secret_json, scopes, appname='Google Client Library - Python', user="", app_dir='.', flags=None, manualScopes=[], *args,
-                 **kwargs):
-        self._loadApiNames(scopes)
-        self.SCOPES = list(set([x['scope']
-                                for x in self.apis.values()] + manualScopes))
-
-        home_dir = os.path.abspath(app_dir)
-        self.credential_dir = os.path.join(home_dir, '.credentials')
-        os.makedirs(self.credential_dir, exist_ok=True)
-
-        self.name = appname
-        self.filename = ''.join(map(chr, (x for x in self.name.encode() if x < 128))).lower().replace(' ',
-                                                                                                      '_') + user + ".json"
-        self.credential_path = os.path.join(self.credential_dir, self.filename)
-
-        store = Storage(self.credential_path)
-        credentials = store.locked_get()
-        if not credentials or credentials.invalid:
-            flow = client.flow_from_clientsecrets(secret_json, self.SCOPES)
-            flow.user_agent = self.name
-            if flags == None:
-                flags = argparser.parse_args([])
-            credentials = tools.run_flow(flow, store, flags)
-            logger.info("Storing credentials to %s" % self.credential_path)
-        logger.info("Credentials acquired")
-        self.credentials = credentials
-
-        self.http_auth = self.credentials.authorize(Http())
-        logger.info("Authorization acquired")
-
+class _api_builder:
     def _loadApiNames(self, scopes):
         apiset = dict()
         for x in list(set(scopes)):
@@ -81,7 +51,40 @@ class oauth2:
             logger.warning("%s is not a valid API" % api)
 
 
-class service_acc(oauth2):
+class oauth2(_api_builder):
+
+    def __init__(self, secret_json, scopes, appname='Google Client Library - Python', user="",
+                 app_dir='.', flags=None, manualScopes=[], *args, **kwargs):
+        self._loadApiNames(scopes)
+        self.SCOPES = list(set([x['scope']
+                                for x in self.apis.values()] + manualScopes))
+
+        home_dir = os.path.abspath(app_dir)
+        self.credential_dir = os.path.join(home_dir, '.credentials')
+        os.makedirs(self.credential_dir, exist_ok=True)
+
+        self.name = appname
+        self.filename = ''.join(map(chr, (x for x in self.name.encode() if x < 128))).lower().replace(' ',
+                                                                                                      '_') + user + ".json"
+        self.credential_path = os.path.join(self.credential_dir, self.filename)
+
+        store = Storage(self.credential_path)
+        credentials = store.locked_get()
+        if not credentials or credentials.invalid:
+            flow = client.flow_from_clientsecrets(secret_json, self.SCOPES)
+            flow.user_agent = self.name
+            if flags == None:
+                flags = argparser.parse_args([])
+            credentials = tools.run_flow(flow, store, flags)
+            logger.info("Storing credentials to %s" % self.credential_path)
+        logger.info("Credentials acquired")
+        self.credentials = credentials
+
+        self.http_auth = self.credentials.authorize(Http())
+        logger.info("Authorization acquired")
+
+
+class service_acc(_api_builder):
     def __init__(self, jsonfile, scopes, manualScopes=[], domainWide=False, *args, **kwargs):
         self._loadApiNames(scopes)
         self.SCOPES = list(set([x['scope']
@@ -106,7 +109,7 @@ class service_acc(oauth2):
             return self
 
 
-class delegated(oauth2):
+class delegated(_api_builder):
     def __init__(self, dCredentials, apis):
         self.valid_apis = apis
         self.credentials = dCredentials
