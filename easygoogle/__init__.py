@@ -80,35 +80,61 @@ class _api_builder:
                 "The class '_api_builder' should not be instantiated\nIt should be inherited by other class that implements a valid self.http_auth.")
 
 
+# OAuth2 class
+# Handles API connector building, configuration of avaiable API and OAuth2 authentication flow
 class oauth2(_api_builder):
 
+    # Main constructor function
     def __init__(self, secret_json, scopes, appname='Google Client Library - Python', user="",
-                 app_dir='.', flags=None, manualScopes=[], *args, **kwargs):
+                 app_dir='.', flags=None, manualScopes=[]):
+
+        # Load valid APIs unlocked with the scopes
         self._loadApiNames(scopes)
+
+        # Save all scopes results
         self.SCOPES = list(set([x['scope']
                                 for x in self.apis.values()] + manualScopes))
 
+        # Home directory of the app
         home_dir = os.path.abspath(app_dir)
+        # Path to credentials files directory
         self.credential_dir = os.path.join(home_dir, '.credentials')
+        # Create credentials directory if not exists
         os.makedirs(self.credential_dir, exist_ok=True)
 
+        # Save app name
         self.name = appname
-        self.filename = ''.join(map(chr, (x for x in self.name.encode() if x < 128))).lower().replace(' ',
-                                                                                                      '_') + user + ".json"
+
+        # Construct file name
+        self.filename = ''.join(
+            map(chr, (x for x in self.name.encode() if x < 128))).lower()
+        self.filename = self.filename.replace(' ', '_') + user + ".json"
+
+        # Assemble full credential file path
         self.credential_path = os.path.join(self.credential_dir, self.filename)
 
+        # Open credentials store connector to file path
         store = Storage(self.credential_path)
         credentials = store.locked_get()
+        # If invalid credentials stored, starts new default authorization flow
         if not credentials or credentials.invalid:
+            # Instantiate flow
             flow = client.flow_from_clientsecrets(secret_json, self.SCOPES)
+            # Set user agent
             flow.user_agent = self.name
+            # Parse default flags
             if flags == None:
                 flags = argparser.parse_args([])
+
+            # Get credentials from default flow execution
             credentials = tools.run_flow(flow, store, flags)
             logger.info("Storing credentials to %s" % self.credential_path)
+
+        # Save credentials
         logger.info("Credentials acquired")
         self.credentials = credentials
 
+        # Authorize HTTP requests
         self.http_auth = self.credentials.authorize(Http())
         logger.info("Authorization acquired")
 
