@@ -180,23 +180,37 @@ class oauth2_manual(_api_builder):
         logger.info("Authorization acquired")
 
 
+# Handler for service account authentication
 class service_acc(_api_builder):
+
+    # Instantiate handler
     def __init__(self, jsonfile, scopes, manualScopes=[], domainWide=False, *args, **kwargs):
+
+        # Load valid APIs unlocked with the scopes
         self._loadApiNames(scopes)
+
+        # Save all scopes results
         self.SCOPES = list(set([x['scope']
                                 for x in self.apis.values()] + manualScopes))
+
+        # Set domain wide delegation flag
         self.domWide = domainWide
 
+        # Acquire credentials from JSON keyfile
         self.credentials = ServiceAccountCredentials.from_json_keyfile_name(
             jsonfile, scopes=self.SCOPES)
         logger.debug("Credentials acquired")
 
+        # Authorize HTTP requests
         self.http_auth = self.credentials.authorize(Http())
         logger.debug("Authorization acquired")
 
+    # Delegate authorization using application impersonation of authority
     def delegate(self, user):
+        # Proceed only if domain wide delegation flag was setted to True
         if self.domWide:
-            res = delegated(self.credentials.create_delegated(
+            # Instantiate delegated handler
+            res = _delegated(self.credentials.create_delegated(
                 user), self.valid_apis)
             logger.info("Created delegated credentials")
             return res
@@ -205,7 +219,8 @@ class service_acc(_api_builder):
             return self
 
 
-class delegated(_api_builder):
+# Delegated class, created from service account application impersonation
+class _delegated(_api_builder):
     def __init__(self, dCredentials, apis):
         self.valid_apis = apis
         self.credentials = dCredentials
