@@ -4,8 +4,11 @@ setup(
     name="easygoogle",
     packages=["easygoogle"],
     license="GNU General Public License v3.0",
-    version='1.0',
+    version='1.0.2',
     description="Easy to use wrapper to google APIs client library",
+    package_data={
+        'easygoogle': ['*.pk']
+    },
     author="Luiz Augusto Ferraz",
     author_email="adm.fryuni@gmail.com",
     install_requires=["google-api-python-client (>=1.6.2)"],
