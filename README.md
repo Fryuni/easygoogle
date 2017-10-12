@@ -15,23 +15,23 @@ Supports OAuth authentication and [service accounts](https://developers.google.c
 To use Google APIs you'll need an credentials _json_ file from Google Cloud Platform.
 To generate it, follow this steps:
 1. Ensure you have a [GCP _(Google Cloud Platform)_ Project](https://cloud.google.com/resource-manager/docs/creating-managing-projects)
-- Go to the [GCP Console](https://console.cloud.google.com) and select the project that you want to use on the top-left corner on the right of the title and the three dots
-- Go to the [API Library](https://console.cloud.google.com/apis/library) and enable the APIs you intend to use
-- On the APIs & services Dashboard, where you should arrive, click on Credentials on the left menu
+1. Go to the [GCP Console](https://console.cloud.google.com) and select the project that you want to use on the top-left corner on the right of the title and the three dots
+1. Go to the [API Library](https://console.cloud.google.com/apis/library) and enable the APIs you intend to use
+1. On the APIs & services Dashboard, where you should arrive, click on Credentials on the left menu
 
 ###### To use OAuth2 authentication:
 
 1. Click on the blue button **_Create credentials_** and select **_OAuth Client ID_**
-- Select your application type, name it and click _Create_ (if you are running utilities scripts, you probably want the _Other_ type)
-- Click OK on the popup, find the name you just used and click the download button at the right end of the line
+1. Select your application type, name it and click _Create_ (if you are running utilities scripts, you probably want the _Other_ type)
+1. Click OK on the popup, find the name you just used and click the download button at the right end of the line
 
 ###### To use a Service Account authentication:
 
 1. Click on the blue button **_Create credentials_** and select **_Service account key_**
-- Select the service account you want to use or create a new one
+1. Select the service account you want to use or create a new one
   - If you are going to use _Domain wide Delegatio_, you need to ensure the service account has the role **Project > Service Account Actor** as well as the requirements on the [official documentation](https://developers.google.com/identity/protocols/OAuth2ServiceAccount#delegatingauthority)
-- Select the keyfile type **JSON**
-- Save the file
+1. Select the keyfile type **JSON**
+1. Save the file
 
 
 ## Usage
