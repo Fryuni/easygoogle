@@ -65,7 +65,7 @@ class _api_builder:
     def get_api(self, api):
 
         # Raises error if object is built ditectly as '_api_builder'
-        if type(self) is not _api_builder and isinstance(_api_builder):
+        if type(self) is not _api_builder and isinstance(self, _api_builder):
             # Build connector if API identifier is valid
             if api in self.valid_apis:
                 res = build(self.valid_apis[api][0], self.valid_apis[api]
