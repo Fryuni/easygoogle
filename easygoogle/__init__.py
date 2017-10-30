@@ -69,7 +69,7 @@ class _api_builder:
             # Build connector if API identifier is valid
             if api in self.valid_apis:
                 res = build(self.valid_apis[api][0], self.valid_apis[api]
-                            [1], http=self.http_auth)
+                            [1], http=self.http_auth, cache_discovery=False)
                 logger.info("%s API Generated" % api)
                 return res
             else:
