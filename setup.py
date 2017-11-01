@@ -11,7 +11,7 @@ setup(
     },
     author="Luiz Augusto Ferraz",
     author_email="adm.fryuni@gmail.com",
-    install_requires=["google-api-python-client (>=1.6.2)"],
+    install_requires=["google-api-python-client (>=1.6.4)"],
     url="https://github.com/Fryuni/easy_google",
     download_url='https://github.com/Fryuni/easy_google/archive/1.0.1.tar.gz',
     keywords="google apis google-apis",
