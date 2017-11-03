@@ -13,11 +13,13 @@ apis = dict()
 
 
 # Configure valid apis and scopes from Google Documentation
-def config():
+def config(test_mode=False):
+    global apis
+    apis = dict()
 
     # Read python native API support page
     apiPageData = uopen(req('https://developers.google.com/api-client-library/python/apis/',
-                            headers={'User-Agent': 'easyGoogle python api configurator'}))
+                            headers={'User-Agent': 'easyGoogle'}))
 
     # Search for all APIs identifiers and versions on page
     findings = findall(
@@ -29,7 +31,7 @@ def config():
 
     # Read full Google APIs scopes list page
     scopePageData = uopen(req('https://developers.google.com/identity/protocols/googlescopes',
-                              headers={'User-Agent': 'easyGoogle python api configurator'}))
+                              headers={'User-Agent': 'easyGoogle'}))
 
     # Compile regular expressions to identify API block
     rx_header = rExcompile("\\s*<h2.*?<a href=.*?\">(.+? API)</a>, (.+?)</h2>")
@@ -62,6 +64,10 @@ def config():
                         setapiinfo(python_confirmed[match_header.group(1, 2)],
                                    match_scope.group(1))
 
+    # Return results in case of a test
+    if test_mode:
+        return apis
+
     # Save result configuration to pickle save file
     with open(join(dirname(__file__), 'apis.pk'), 'wb') as fl:
         dump(apis, fl)
@@ -69,6 +75,7 @@ def config():
 
 # Link scope to API
 def setapiinfo(info, scope):
+    global apis
     # Extract only meaningfull portion the scope link
     name = scope.split('/')[-1]
 
@@ -83,6 +90,9 @@ def setapiinfo(info, scope):
     else:
         apis[name] = {
             'apis': [{'name': info[1], 'version': info[2]}], 'scope': scope}
+
+    # Also return the working api state
+    return apis[name]
 
 
 if __name__ == "__main__":
