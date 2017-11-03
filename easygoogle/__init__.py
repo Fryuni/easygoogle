@@ -15,8 +15,18 @@ argparser = ArgumentParser(parents=[tools.argparser], add_help=False)
 
 # Load APIs versions, identifiers and scopes relations
 # from pickle file
-with open(os.path.join(os.path.dirname(__file__), 'apis.pk'), 'rb') as fl:
-    apisDict = load(fl)
+
+apisDict = None
+
+
+def loadApiDict():
+    global apisDict
+    with open(os.path.join(os.path.dirname(__file__), 'apis.pk'), 'rb') as fl:
+        apisDict = load(fl)
+
+
+if os.path.isfile(os.path.join(os.path.dirname(__file__), 'apis.pk')):
+    loadApiDict()
 
 
 # Base class, loads API information and build the connectors with the credentials
@@ -24,6 +34,8 @@ class _api_builder:
 
     # Internal function to load all avaiable APIs based on the scopes
     def _loadApiNames(self, scopes):
+        if apisDict == None:
+            loadApiDict()
 
         # Create a new dictionary to hold the information
         apiset = dict()
@@ -235,3 +247,8 @@ class _delegated(_api_builder):
         self.valid_apis = apis
         self.credentials = dCredentials
         self.http_auth = self.credentials.authorize(Http())
+
+
+# Get comma separated list of scopes to use on the admin panel authorization
+def get_scopes(names):
+    return ','.join(apisDict[x]['scope'] for x in names)

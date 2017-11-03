@@ -7,7 +7,7 @@ setup(
     version='1.0.2',
     description="Easy to use wrapper to google APIs client library",
     package_data={
-        'easygoogle': ['*.pk']
+        'easygoogle': ['apis.pk']
     },
     author="Luiz Augusto Ferraz",
     author_email="adm.fryuni@gmail.com",
