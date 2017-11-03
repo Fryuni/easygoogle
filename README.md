@@ -1,14 +1,19 @@
 # Easy Google APIs
+[![CircleCI](https://circleci.com/gh/Fryuni/easygoogle/tree/master.svg?style=shield)](https://circleci.com/gh/Fryuni/easygoogle/tree/master)
+[![PyPiStatus](https://img.shields.io/pypi/status/easygoogle.svg)](https://pypi.org/project/easygoogle/)
+
+[![PyPi](https://img.shields.io/pypi/v/easygoogle.svg)](https://pypi.org/project/easygoogle/)
+[![PyPiVersions](https://img.shields.io/pypi/pyversions/google-cloud.svg)](https://pypi.org/project/easygoogle/)
+
 _Google APIs python library wrapepr_
 
-### **WARNING - This documentation is about the 1.0 tag. The master branch is ahead of this README file**
 Python package to make Google APIs more practical and easy to use
 
 Supports OAuth authentication and [service accounts](https://developers.google.com/identity/protocols/OAuth2ServiceAccount) (directly and with [domain wide delegation](https://developers.google.com/identity/protocols/OAuth2ServiceAccount#delegatingauthority))
 
 ## Installation
 
-    pip install easygoogle
+    pip install -U easygoogle
 
 ## Prerequisites
 
