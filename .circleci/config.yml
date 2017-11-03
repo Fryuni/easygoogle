@@ -36,11 +36,11 @@ jobs:
 
       # run tests!
       - run:
-          name: run tests
+          name: run tests on package
           command: |
             . venv/bin/activate
-            python setup.py build
+            python -m pytest
 
-      - store_artifacts:
-          path: test-reports
-          destination: test-reports
+      - deploy:
+          name: Push to PyPi (if is tag)
+          command: .circleci/twine_upload.sh
