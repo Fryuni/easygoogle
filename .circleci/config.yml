@@ -4,13 +4,16 @@
 #
 version: 2
 jobs:
-  build-and-test:
+  build:
     docker:
       # specify the version you desire here
       # use `-browsers` prefix for selenium tests, e.g. `3.6.1-browsers`
       - image: circleci/python:3.6
 
     working_directory: ~/repo
+
+    tags:
+      only: /release-.+/
 
     steps:
       - checkout
@@ -27,6 +30,7 @@ jobs:
           command: |
             python3 -m venv venv
             . venv/bin/activate
+            pip install -U wheel
             pip install -r requirements.txt
 
       - save_cache:
@@ -41,53 +45,25 @@ jobs:
             . venv/bin/activate
             python -m pytest
 
-  deploy-job:
-    docker:
-      - image: circleci/python:3.6
-
-    working_directory: ~/repo
-
-    environment:
-      - CIRCLE_TAG: '1.1.1'
-
-    steps:
-      - checkout
-
-      # Download and cache dependencies
-      - restore_cache:
-          keys:
-          - v1-dependencies-{{ checksum "requirements.txt" }}
-          # fallback to using the latest cache if no exact match is found
-          - v1-dependencies-
-
-      - run:
-          name: install dependencies
-          command: |
-            python3 -m venv venv
-            . venv/bin/activate
-            pip install -U pip
-            pip install -U wheel
-            pip install -r requirements.txt
-
-      - run:
+      - deploy:
           name: Push to PyPi (if is tag)
           command: |
             . venv/bin/activate
             .circleci/twine_upload.sh
 
-workflows:
-  version: 2
-  build-deploy:
-    jobs:
-      - build-and-test:
-          filters:
-            tags:
-              only: /.*/
-      - deploy-job:
-          requires:
-            - build-and-test
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              only: master
+# workflows:
+#   version: 2
+#   build-deploy:
+#     jobs:
+#       - build-and-test:
+#           filters:
+#             tags:
+#               only: /.*/
+#       - deploy-job:
+#           requires:
+#             - build-and-test
+#           filters:
+#             tags:
+#               only: /.*/
+#             branches:
+#               only: master
