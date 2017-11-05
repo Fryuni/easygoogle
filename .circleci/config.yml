@@ -69,7 +69,9 @@ jobs:
 
       - run:
           name: Push to PyPi (if is tag)
-          command: .circleci/twine_upload.sh
+          command: |
+            . venv/bin/activate
+            .circleci/twine_upload.sh
 
 workflows:
   version: 2
