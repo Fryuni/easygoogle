@@ -36,7 +36,7 @@ def config(test_mode=False):
     # Compile regular expressions to identify API block
     rx_header = rExcompile("\\s*<h2.*?<a href=.*?\">(.+? API)</a>, (.+?)</h2>")
     # Compile regular expressions to extract scope
-    rx_scope = rExcompile("\\s*<tr><td>(.+?)</td>")
+    rx_scope = rExcompile("\\s*<tr>\\s*?<td>(.+?)</td>")
 
     # Iterates througth all lines of the scopes page source
     while scopePageData.length > 0:
@@ -64,13 +64,11 @@ def config(test_mode=False):
                         setapiinfo(python_confirmed[match_header.group(1, 2)],
                                    match_scope.group(1))
 
-    # Return results in case of a test
-    if test_mode:
-        return apis
-
     # Save result configuration to pickle save file
     with open(join(dirname(__file__), 'apis.pk'), 'wb') as fl:
         dump(apis, fl)
+
+    return apis
 
 
 # Link scope to API
@@ -83,13 +81,11 @@ def setapiinfo(info, scope):
 
     # If scope already registered, link to new API
     if name in apis:
-        apis[name]['apis'].append(
-            {'name': info[1], 'version': info[2], 'scope': scope})
+        apis[name]['apis'].append({'name': info[1], 'version': info[2]})
 
     # Else, register scope and link to API
     else:
-        apis[name] = {
-            'apis': [{'name': info[1], 'version': info[2]}], 'scope': scope}
+        apis[name] = {'apis': [{'name': info[1], 'version': info[2]}], 'scope': scope}
 
     # Also return the working api state
     return apis[name]
