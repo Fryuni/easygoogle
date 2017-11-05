@@ -64,6 +64,10 @@ def config(test_mode=False):
                         setapiinfo(python_confirmed[match_header.group(1, 2)],
                                    match_scope.group(1))
 
+    # Return results in case of a test
+    if test_mode:
+        return apis
+
     # Save result configuration to pickle save file
     with open(join(dirname(__file__), 'apis.pk'), 'wb') as fl:
         dump(apis, fl)
@@ -86,6 +90,9 @@ def setapiinfo(info, scope):
     # Else, register scope and link to API
     else:
         apis[name] = {'apis': [{'name': info[1], 'version': info[2]}], 'scope': scope}
+
+    # Also return the working api state
+    return apis[name]
 
     # Also return the working api state
     return apis[name]
