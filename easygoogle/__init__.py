@@ -1,28 +1,30 @@
+import json
 import logging
 import os
+import pickle
 from argparse import ArgumentParser
-from pickle import load
 from sys import argv
 
-from apiclient.discovery import build
-from httplib2 import Http
-from oauth2client import client, tools
-from oauth2client.file import Storage
-from oauth2client.service_account import ServiceAccountCredentials
+import google.auth.transport.requests
+import google.oauth2.credentials
+import google.oauth2.service_account
+import googleapiclient
+import googleapiclient.discovery
+from easygoogle.config import config as updateApiCache
+from google_auth_oauthlib.flow import InstalledAppFlow
 
 logger = logging.getLogger(__name__)
-argparser = ArgumentParser(parents=[tools.argparser], add_help=False)
 
 # Load APIs versions, identifiers and scopes relations
 # from pickle file
 
-apisDict = None
+apisDict = {}
 
 
 def loadApiDict():
     global apisDict
     with open(os.path.join(os.path.dirname(__file__), 'apis.pk'), 'rb') as fl:
-        apisDict = load(fl)
+        apisDict = pickle.load(fl)
 
 
 if os.path.isfile(os.path.join(os.path.dirname(__file__), 'apis.pk')):
@@ -76,20 +78,15 @@ class _api_builder:
     # Function to build connector based on API identifiers
     def get_api(self, api):
 
-        # Raises error if object is built ditectly as '_api_builder'
-        if type(self) is not _api_builder and isinstance(self, _api_builder):
-            # Build connector if API identifier is valid
-            if api in self.valid_apis:
-                res = build(self.valid_apis[api][0], self.valid_apis[api]
-                            [1], http=self.http_auth, cache_discovery=False)
-                logger.info("%s API Generated" % api)
-                return res
-            else:
-                logger.warning("%s is not a valid API" % api)
-                raise ValueError("Invalid API identifier")
+        # Build connector if API identifier is valid
+        if api in self.valid_apis:
+            res = googleapiclient.discovery.build(self.valid_apis[api][0], self.valid_apis[api][1],
+                                                  credentials=self.credentials, cache_discovery=False)
+            logger.info("%s API Generated" % api)
+            return res
         else:
-            raise TypeError(
-                "The class '_api_builder' should not be instantiated\nIt should be inherited by other class that implements a valid self.http_auth.")
+            logger.warning("%s is not a valid API" % api)
+            raise ValueError("Invalid API identifier")
 
 
 # OAuth2 class
@@ -98,7 +95,7 @@ class oauth2(_api_builder):
 
     # Main constructor function
     def __init__(self, secret_json, scopes, appname='Google Client Library - Python', user="",
-                 app_dir='.', flags=None, manualScopes=[]):
+                 app_dir='.', flags=None, manualScopes=[], hostname='localhost'):
 
         # Load valid APIs unlocked with the scopes
         self._loadApiNames(scopes)
@@ -120,35 +117,46 @@ class oauth2(_api_builder):
         # Construct file name
         self.filename = ''.join(
             map(chr, (x for x in self.name.encode() if x < 128))).lower()
-        self.filename = self.filename.replace(' ', '_') + user + ".json"
+        self.filename = self.filename.replace(' ', '_') + '#' + user + ".json"
 
         # Assemble full credential file path
         self.credential_path = os.path.join(self.credential_dir, self.filename)
 
-        # Open credentials store connector to file path
-        store = Storage(self.credential_path)
-        credentials = store.locked_get()
-        # If invalid credentials stored, starts new default authorization flow
-        if not credentials or credentials.invalid:
-            # Instantiate flow
-            flow = client.flow_from_clientsecrets(secret_json, self.SCOPES)
-            # Set user agent
-            flow.user_agent = self.name
-            # Parse default flags
-            if flags == None:
-                flags = argparser.parse_args([])
+        # Load saved credentials if the file exists
+        if os.path.isfile(self.credential_path):
+            saved_state = json.load(open(self.credential_path))
+            for s in self.SCOPES:
+                if s not in saved_state['scopes']:
+                    self.SCOPES = list(set(self.SCOPES + saved_state['scopes']))
+                    saved_state['valid']
+                    break
+        else:
+            saved_state = None
 
-            # Get credentials from default flow execution
-            credentials = tools.run_flow(flow, store, flags)
-            logger.info("Storing credentials to %s" % self.credential_path)
+        if saved_state == None:
+            # No valid credentials found
+            # Instantiate authrization flow
+            flow = InstalledAppFlow.from_client_secrets_file(secret_json, scopes=self.SCOPES)
 
-        # Save credentials
-        logger.info("Credentials acquired")
+            # Start web server to authorize application
+            credentials = flow.run_local_server(host=hostname)
+            credentials.refresh(google.auth.transport.requests.Request(session=flow.authorized_session()))
+
+            saved_state = {
+                'refresh_token': credentials.refresh_token,
+                'client_id': credentials.client_id,
+                'client_secret': credentials.client_secret,
+                'token_uri': credentials.token_uri,
+                'id_token': credentials.id_token,
+                'scopes': list(credentials.scopes),
+                'token': credentials.token
+            }
+
+            json.dump(saved_state, open(self.credential_path, 'w'))
+        else:
+            credentials = google.oauth2.credentials.Credentials(**saved_state)
+            credentials.refresh(google.auth.transport.requests.Request())
         self.credentials = credentials
-
-        # Authorize HTTP requests
-        self.http_auth = self.credentials.authorize(Http())
-        logger.info("Authorization acquired")
 
 
 # OAuth2 class
@@ -206,7 +214,7 @@ class oauth2_manual(_api_builder):
 class service_acc(_api_builder):
 
     # Instantiate handler
-    def __init__(self, jsonfile, scopes, manualScopes=[], domainWide=False, *args, **kwargs):
+    def __init__(self, service_file, scopes, manualScopes=[], domainWide=False, *args, **kwargs):
 
         # Load valid APIs unlocked with the scopes
         self._loadApiNames(scopes)
@@ -216,23 +224,19 @@ class service_acc(_api_builder):
                                 for x in self.apis.values()] + manualScopes))
 
         # Set domain wide delegation flag
-        self.domWide = domainWide
+        self.__domWide = domainWide
 
         # Acquire credentials from JSON keyfile
-        self.credentials = ServiceAccountCredentials.from_json_keyfile_name(
-            jsonfile, scopes=self.SCOPES)
+        self.credentials = google.oauth2.service_account.Credentials.from_service_account_file(
+            service_file, scopes=self.SCOPES)
         logger.debug("Credentials acquired")
-
-        # Authorize HTTP requests
-        self.http_auth = self.credentials.authorize(Http())
-        logger.debug("Authorization acquired")
 
     # Delegate authorization using application impersonation of authority
     def delegate(self, user):
         # Proceed only if domain wide delegation flag was setted to True
-        if self.domWide:
+        if self.__domWide:
             # Instantiate delegated handler
-            res = _delegated(self.credentials.create_delegated(
+            res = _delegated(self.credentials.with_subject(
                 user), self.valid_apis)
             logger.info("Created delegated credentials")
             return res
@@ -240,13 +244,16 @@ class service_acc(_api_builder):
             logger.warning("Domain Wide Delegation disabled")
             return self
 
+    @property
+    def domain_wide(self):
+        return self.__domWide
+
 
 # Delegated class, created from service account application impersonation
 class _delegated(_api_builder):
     def __init__(self, dCredentials, apis):
         self.valid_apis = apis
         self.credentials = dCredentials
-        self.http_auth = self.credentials.authorize(Http())
 
 
 # Get comma separated list of scopes to use on the admin panel authorization

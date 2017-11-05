@@ -31,12 +31,12 @@ def config(test_mode=False):
 
     # Read full Google APIs scopes list page
     scopePageData = uopen(req('https://developers.google.com/identity/protocols/googlescopes',
-                              headers={'User-Agent': 'easyGoogle python api configurator'}))
+                              headers={'User-Agent': 'easyGoogle'}))
 
     # Compile regular expressions to identify API block
     rx_header = rExcompile("\\s*<h2.*?<a href=.*?\">(.+? API)</a>, (.+?)</h2>")
     # Compile regular expressions to extract scope
-    rx_scope = rExcompile("\\s*<tr><td>(.+?)</td>")
+    rx_scope = rExcompile("\\s*<tr>\\s*?<td>(.+?)</td>")
 
     # Iterates througth all lines of the scopes page source
     while scopePageData.length > 0:
@@ -72,24 +72,27 @@ def config(test_mode=False):
     with open(join(dirname(__file__), 'apis.pk'), 'wb') as fl:
         dump(apis, fl)
 
+    return apis
+
 
 # Link scope to API
 def setapiinfo(info, scope):
     global apis
     # Extract only meaningfull portion the scope link
-    name = scope.split('/')[-1]
+    name = scope.strip('/').split('/')[-1]
 
     logger.info("Configuring scope \"%s\" for \"%s\"..." % (name, info[0]))
 
     # If scope already registered, link to new API
     if name in apis:
-        apis[name]['apis'].append(
-            {'name': info[1], 'version': info[2], 'scope': scope})
+        apis[name]['apis'].append({'name': info[1], 'version': info[2]})
 
     # Else, register scope and link to API
     else:
-        apis[name] = {
-            'apis': [{'name': info[1], 'version': info[2]}], 'scope': scope}
+        apis[name] = {'apis': [{'name': info[1], 'version': info[2]}], 'scope': scope}
+
+    # Also return the working api state
+    return apis[name]
 
     # Also return the working api state
     return apis[name]
@@ -98,16 +101,7 @@ def setapiinfo(info, scope):
 if __name__ == "__main__":
 
     # Instantiate basic logging
-    logging.basicConfig(
-        level=logging.INFO, format="[%(name)-20s][%(levelname)-8s]:%(asctime)s: %(message)s")
-
-    # Use coloredlogs if installed
-    try:
-        import coloredlogs
-    except:
-        pass
-    else:
-        coloredlogs.install(level=logging.INFO)
+    logging.basicConfig(level=logging.INFO, format="[%(name)-20s][%(levelname)-8s]:%(asctime)s: %(message)s")
 
     # Start configuration
     config()
