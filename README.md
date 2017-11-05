@@ -50,8 +50,9 @@ user = easygoogle.oauth2(
     appname='Google Client Library - Python', # Optional. Used to identify the credentials file saved
     user='', # Optional. Used to identify the credentials file saved
     app_dir='.', # Path to create subdir '.credentials' and store credentials files. Defaults to current working directory
-    flags=None, # Argparser parsed arguments with easygoogle.argparser as parent. Should be defined whenever the main program uses argparser
-    manualScopes=[] # Manually defined scopes for authorization. Used in Single Sign-On with servers that support OAuth authentication
+    manualScopes=[], # Manually defined scopes for authorization. Used in Single Sign-On with servers that support OAuth authentication
+    hostname='localhost', # Where to open authentication flow server
+    port=8080, # Which port to open authentication flow server in
 )
 
 # Build API as the authenticated user
