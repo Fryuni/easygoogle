@@ -77,7 +77,7 @@ def config(test_mode=False):
 def setapiinfo(info, scope):
     global apis
     # Extract only meaningfull portion the scope link
-    name = scope.split('/')[-1]
+    name = scope.strip('/').split('/')[-1]
 
     logger.info("Configuring scope \"%s\" for \"%s\"..." % (name, info[0]))
 
