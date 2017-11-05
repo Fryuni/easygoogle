@@ -1,30 +1,30 @@
+import json
 import logging
 import os
+import pickle
 from argparse import ArgumentParser
-from pickle import load
 from sys import argv
 
-import google.oauth2
+import google.auth.transport.requests
+import google.oauth2.credentials
 import google.oauth2.service_account
 import googleapiclient
 import googleapiclient.discovery
-from httplib2 import Http
-from oauth2client import client, tools
-from oauth2client.file import Storage
+from easygoogle.config import config as updateApiCache
+from google_auth_oauthlib.flow import InstalledAppFlow
 
 logger = logging.getLogger(__name__)
-argparser = ArgumentParser(parents=[tools.argparser], add_help=False)
 
 # Load APIs versions, identifiers and scopes relations
 # from pickle file
 
-apisDict = None
+apisDict = {}
 
 
 def loadApiDict():
     global apisDict
     with open(os.path.join(os.path.dirname(__file__), 'apis.pk'), 'rb') as fl:
-        apisDict = load(fl)
+        apisDict = pickle.load(fl)
 
 
 if os.path.isfile(os.path.join(os.path.dirname(__file__), 'apis.pk')):
@@ -95,7 +95,7 @@ class oauth2(_api_builder):
 
     # Main constructor function
     def __init__(self, secret_json, scopes, appname='Google Client Library - Python', user="",
-                 app_dir='.', flags=None, manualScopes=[]):
+                 app_dir='.', flags=None, manualScopes=[], hostname='localhost'):
 
         # Load valid APIs unlocked with the scopes
         self._loadApiNames(scopes)
@@ -117,35 +117,46 @@ class oauth2(_api_builder):
         # Construct file name
         self.filename = ''.join(
             map(chr, (x for x in self.name.encode() if x < 128))).lower()
-        self.filename = self.filename.replace(' ', '_') + user + ".json"
+        self.filename = self.filename.replace(' ', '_') + '#' + user + ".json"
 
         # Assemble full credential file path
         self.credential_path = os.path.join(self.credential_dir, self.filename)
 
-        # Open credentials store connector to file path
-        store = Storage(self.credential_path)
-        credentials = store.locked_get()
-        # If invalid credentials stored, starts new default authorization flow
-        if not credentials or credentials.invalid:
-            # Instantiate flow
-            flow = client.flow_from_clientsecrets(secret_json, self.SCOPES)
-            # Set user agent
-            flow.user_agent = self.name
-            # Parse default flags
-            if flags == None:
-                flags = argparser.parse_args([])
+        # Load saved credentials if the file exists
+        if os.path.isfile(self.credential_path):
+            saved_state = json.load(open(self.credential_path))
+            for s in self.SCOPES:
+                if s not in saved_state['scopes']:
+                    self.SCOPES = list(set(self.SCOPES + saved_state['scopes']))
+                    saved_state['valid']
+                    break
+        else:
+            saved_state = None
 
-            # Get credentials from default flow execution
-            credentials = tools.run_flow(flow, store, flags)
-            logger.info("Storing credentials to %s" % self.credential_path)
+        if saved_state == None:
+            # No valid credentials found
+            # Instantiate authrization flow
+            flow = InstalledAppFlow.from_client_secrets_file(secret_json, scopes=self.SCOPES)
 
-        # Save credentials
-        logger.info("Credentials acquired")
+            # Start web server to authorize application
+            credentials = flow.run_local_server(host=hostname)
+            credentials.refresh(google.auth.transport.requests.Request(session=flow.authorized_session()))
+
+            saved_state = {
+                'refresh_token': credentials.refresh_token,
+                'client_id': credentials.client_id,
+                'client_secret': credentials.client_secret,
+                'token_uri': credentials.token_uri,
+                'id_token': credentials.id_token,
+                'scopes': list(credentials.scopes),
+                'token': credentials.token
+            }
+
+            json.dump(saved_state, open(self.credential_path, 'w'))
+        else:
+            credentials = google.oauth2.credentials.Credentials(**saved_state)
+            credentials.refresh(google.auth.transport.requests.Request())
         self.credentials = credentials
-
-        # Authorize HTTP requests
-        self.http_auth = self.credentials.authorize(Http())
-        logger.info("Authorization acquired")
 
 
 # OAuth2 class
