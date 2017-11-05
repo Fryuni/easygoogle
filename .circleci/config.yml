@@ -47,8 +47,8 @@ jobs:
 
     working_directory: ~/repo
 
-    environment:
-      - CIRCLE_TAG: '1.1.1'
+    # environment:
+    #   - CIRCLE_TAG: '1.1.1'
 
     steps:
       - checkout
@@ -82,6 +82,7 @@ workflows:
             tags:
               only: /.*/
       - deploy-job:
+          owner: Fryuni
           requires:
             - build-and-test
           filters:
