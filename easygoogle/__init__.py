@@ -4,11 +4,13 @@ from argparse import ArgumentParser
 from pickle import load
 from sys import argv
 
-from apiclient.discovery import build
+import google.oauth2
+import google.oauth2.service_account
+import googleapiclient
+import googleapiclient.discovery
 from httplib2 import Http
 from oauth2client import client, tools
 from oauth2client.file import Storage
-from oauth2client.service_account import ServiceAccountCredentials
 
 logger = logging.getLogger(__name__)
 argparser = ArgumentParser(parents=[tools.argparser], add_help=False)
@@ -76,20 +78,15 @@ class _api_builder:
     # Function to build connector based on API identifiers
     def get_api(self, api):
 
-        # Raises error if object is built ditectly as '_api_builder'
-        if type(self) is not _api_builder and isinstance(self, _api_builder):
-            # Build connector if API identifier is valid
-            if api in self.valid_apis:
-                res = build(self.valid_apis[api][0], self.valid_apis[api]
-                            [1], http=self.http_auth, cache_discovery=False)
-                logger.info("%s API Generated" % api)
-                return res
-            else:
-                logger.warning("%s is not a valid API" % api)
-                raise ValueError("Invalid API identifier")
+        # Build connector if API identifier is valid
+        if api in self.valid_apis:
+            res = googleapiclient.discovery.build(self.valid_apis[api][0], self.valid_apis[api][1],
+                                                  credentials=self.credentials, cache_discovery=False)
+            logger.info("%s API Generated" % api)
+            return res
         else:
-            raise TypeError(
-                "The class '_api_builder' should not be instantiated\nIt should be inherited by other class that implements a valid self.http_auth.")
+            logger.warning("%s is not a valid API" % api)
+            raise ValueError("Invalid API identifier")
 
 
 # OAuth2 class
@@ -206,7 +203,7 @@ class oauth2_manual(_api_builder):
 class service_acc(_api_builder):
 
     # Instantiate handler
-    def __init__(self, jsonfile, scopes, manualScopes=[], domainWide=False, *args, **kwargs):
+    def __init__(self, service_file, scopes, manualScopes=[], domainWide=False, *args, **kwargs):
 
         # Load valid APIs unlocked with the scopes
         self._loadApiNames(scopes)
@@ -216,23 +213,19 @@ class service_acc(_api_builder):
                                 for x in self.apis.values()] + manualScopes))
 
         # Set domain wide delegation flag
-        self.domWide = domainWide
+        self.__domWide = domainWide
 
         # Acquire credentials from JSON keyfile
-        self.credentials = ServiceAccountCredentials.from_json_keyfile_name(
-            jsonfile, scopes=self.SCOPES)
+        self.credentials = google.oauth2.service_account.Credentials.from_service_account_file(
+            service_file, scopes=self.SCOPES)
         logger.debug("Credentials acquired")
-
-        # Authorize HTTP requests
-        self.http_auth = self.credentials.authorize(Http())
-        logger.debug("Authorization acquired")
 
     # Delegate authorization using application impersonation of authority
     def delegate(self, user):
         # Proceed only if domain wide delegation flag was setted to True
-        if self.domWide:
+        if self.__domWide:
             # Instantiate delegated handler
-            res = _delegated(self.credentials.create_delegated(
+            res = _delegated(self.credentials.with_subject(
                 user), self.valid_apis)
             logger.info("Created delegated credentials")
             return res
@@ -240,13 +233,16 @@ class service_acc(_api_builder):
             logger.warning("Domain Wide Delegation disabled")
             return self
 
+    @property
+    def domain_wide(self):
+        return self.__domWide
+
 
 # Delegated class, created from service account application impersonation
 class _delegated(_api_builder):
     def __init__(self, dCredentials, apis):
         self.valid_apis = apis
         self.credentials = dCredentials
-        self.http_auth = self.credentials.authorize(Http())
 
 
 # Get comma separated list of scopes to use on the admin panel authorization
