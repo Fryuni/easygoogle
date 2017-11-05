@@ -94,4 +94,5 @@ ENV/
 .ropeproject
 
 # Credential files
+.credentials/
 keys/
