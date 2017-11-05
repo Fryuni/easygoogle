@@ -41,7 +41,7 @@ jobs:
             . venv/bin/activate
             python -m pytest
 
-  deployment:
+  deploy-job:
     docker:
       - image: circleci/python:3.6
 
@@ -59,7 +59,7 @@ workflows:
   build-deploy:
     jobs:
       - build-and-test
-      - deployment:
+      - deploy-job:
           requires:
             - build-and-test
           filters:
