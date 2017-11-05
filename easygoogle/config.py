@@ -98,16 +98,7 @@ def setapiinfo(info, scope):
 if __name__ == "__main__":
 
     # Instantiate basic logging
-    logging.basicConfig(
-        level=logging.INFO, format="[%(name)-20s][%(levelname)-8s]:%(asctime)s: %(message)s")
-
-    # Use coloredlogs if installed
-    try:
-        import coloredlogs
-    except:
-        pass
-    else:
-        coloredlogs.install(level=logging.INFO)
+    logging.basicConfig(level=logging.INFO, format="[%(name)-20s][%(levelname)-8s]:%(asctime)s: %(message)s")
 
     # Start configuration
     config()
