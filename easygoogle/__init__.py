@@ -95,7 +95,7 @@ class oauth2(_api_builder):
 
     # Main constructor function
     def __init__(self, secret_json, scopes, appname='Google Client Library - Python', user="",
-                 app_dir='.', flags=None, manualScopes=[], hostname='localhost'):
+                 app_dir='.', manualScopes=[], hostname='localhost', port=8080):
 
         # Load valid APIs unlocked with the scopes
         self._loadApiNames(scopes)
@@ -139,7 +139,7 @@ class oauth2(_api_builder):
             flow = InstalledAppFlow.from_client_secrets_file(secret_json, scopes=self.SCOPES)
 
             # Start web server to authorize application
-            credentials = flow.run_local_server(host=hostname)
+            credentials = flow.run_local_server(host=hostname, port=port)
             credentials.refresh(google.auth.transport.requests.Request(session=flow.authorized_session()))
 
             saved_state = {
