@@ -1,0 +1,19 @@
+{
+  "scope.unique": {
+    "apis": [{
+      "name": "unique_api",
+      "version": "v1"
+    }],
+    "scope": "https://testscopes.exemple.org/auth/scope.unique"
+  },
+  "scope.multiple": {
+    "apis": [{
+      "name": "shared_api_a",
+      "version": "v1"
+    }, {
+      "name": "shared_api_b",
+      "version": "namedversion_v1"
+    }],
+    "scope": "https://testscopes.exemple.org/auth/scope.multiple"
+  }
+}
