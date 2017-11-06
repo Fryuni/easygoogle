@@ -5,20 +5,23 @@ from setuptools import setup
 
 VERSION = environ.get('CIRCLE_TAG', '0.0.0.dev1')
 DOWNLOAD_URL = None
+DIST_TYPE = 'development'
 
 if 'CIRCLE_TAG' in environ:
-    if VERSION[:8] != 'release-':
-        exit("Invalid CIRCLE_TAG environment")
+    import re
+    match = re.match(r'^([a-z]+)-([0-9]+)\.([0-9]+)\.([0-9]+)(?: - .+)?$', VERSION)
+    if match:
+        VERSION = '.'.join(str(int(p)) for p in match.groups()[1:])
+        DIST_TYPE = match.group(1)
     else:
-        import re
-        match = re.match(r'^([0-9]+)\.([0-9]+)\.([0-9]+)$', VERSION[8:])
-        if match:
-            VERSION = '.'.join(str(int(p)) for p in match.groups())
-        else:
-            exit("Invalid CIRCLE_TAG environment")
+        exit("Invalid CIRCLE_TAG environment variable")
+
+    if DIST_TYPE not in VALID_DIST_TYPES:
+        exit("Invalid tag prefix")
+
     DOWNLOAD_URL = 'https://github.com/Fryuni/easygoogle/archive/%s.tar.gz' % VERSION
 
-print("Running for version:", VERSION)
+print("Running for %s version: %s" % (DIST_TYPE, VERSION))
 print()
 
 setup(
