@@ -41,32 +41,19 @@ jobs:
             . venv/bin/activate
             python -m pytest
 
-  deploy-job:
-    docker:
-      - image: circleci/python:3.6
-
-    working_directory: ~/repo
-
-    steps:
-      - checkout
-
       - run:
           name: Push to PyPi (if is tag)
-          command: .circleci/twine_upload.sh
+          command: |
+            . venv/bin/activate
+            .circleci/twine_upload.sh
 
-workflows:
-  version: 2
-  build-deploy:
-    jobs:
-      - build-and-test:
-          filters:
-            tags:
-              only: /.*/
-      - deploy-job:
-          requires:
-            - build-and-test
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
+deployment:
+  tag_build_for_cci2:
+    # 1.0 style config for tag builds workaround
+    # For context, see:
+    # - https://discuss.circleci.com/t/build-on-tag/9864/30
+    # - https://discuss.circleci.com/t/git-tag-deploys-in-2-0/9493/8
+    # - https://circleci.com/gh/keybits/circulate/58#config/containers/0
+    tag: /release-([0-9]+)\.([0-9]+)\.([0-9]+)/
+    commands:
+      - true
