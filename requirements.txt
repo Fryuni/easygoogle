@@ -4,3 +4,4 @@ pytest-cov==2.5.1
 pytest-mock==1.6.3
 google-auth==1.2.0
 google-auth-oauthlib==0.1.1
+google-auth-httplib2==0.0.2

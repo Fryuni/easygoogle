@@ -4,7 +4,7 @@
 #
 version: 2
 jobs:
-  build-and-test:
+  build:
     docker:
       # specify the version you desire here
       # use `-browsers` prefix for selenium tests, e.g. `3.6.1-browsers`
@@ -41,46 +41,19 @@ jobs:
             . venv/bin/activate
             python -m pytest
 
-  deploy-job:
-    docker:
-      - image: circleci/python:3.6
-
-    working_directory: ~/repo
-
-    # environment:
-    #   - CIRCLE_TAG: '1.1.1'
-
-    steps:
-      - checkout
-
-      # Download and cache dependencies
-      - restore_cache:
-          keys:
-          - v1-dependencies-{{ checksum "requirements.txt" }}
-          # fallback to using the latest cache if no exact match is found
-          - v1-dependencies-
-
-      - run:
-          name: install dependencies
-          command: |
-            python3 -m venv venv
-            . venv/bin/activate
-            pip install -r requirements.txt
-
       - run:
           name: Push to PyPi (if is tag)
           command: |
             . venv/bin/activate
             .circleci/twine_upload.sh
 
-workflows:
-  version: 2
-  build-deploy:
-    jobs:
-      - build-and-test
-      - deploy-job:
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              only: master
+deployment:
+  tag_build_for_cci2:
+    # 1.0 style config for tag builds workaround
+    # For context, see:
+    # - https://discuss.circleci.com/t/build-on-tag/9864/30
+    # - https://discuss.circleci.com/t/git-tag-deploys-in-2-0/9493/8
+    # - https://circleci.com/gh/keybits/circulate/58#config/containers/0
+    tag: /release-([0-9]+)\.([0-9]+)\.([0-9]+)/
+    commands:
+      - true
