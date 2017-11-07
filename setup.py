@@ -22,8 +22,6 @@ if 'CIRCLE_TAG' in environ:
 
     DOWNLOAD_URL = 'https://github.com/Fryuni/easygoogle/archive/%s.tar.gz' % VERSION
 
-print("Running for %s version: %s" % (DIST_TYPE, VERSION))
-print()
 
 setup(
     name="easygoogle",

@@ -94,9 +94,6 @@ def setapiinfo(info, scope):
     # Also return the working api state
     return apis[name]
 
-    # Also return the working api state
-    return apis[name]
-
 
 if __name__ == "__main__":
 

@@ -36,9 +36,6 @@ class _api_builder:
 
     # Internal function to load all avaiable APIs based on the scopes
     def _loadApiNames(self, scopes):
-        if apisDict == None:
-            loadApiDict()
-
         # Create a new dictionary to hold the information
         apiset = dict()
 
