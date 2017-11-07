@@ -40,7 +40,7 @@ jobs:
           command: |
             . venv/bin/activate
             echo "repo_token: ${COVERALLS_REPO_TOKEN}" > .coveralls.yml
-            python -m pytest --cov=easygoogle --cov-append --cov-config=.coveragerc -v
+            python -m pytest --cov=easygoogle --cov-append --cov-config=.coveragerc -v tests/
             python -m coverage report --show-missing
 
       - run:

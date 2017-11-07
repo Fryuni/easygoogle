@@ -4,4 +4,6 @@ show_missing = True
 exclude_lines =
     if __name__ == "__main__":
     except Exception
+    loadApiDict()
+    def loadApiDict()
     #
