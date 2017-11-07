@@ -16,7 +16,7 @@ def test_inheritance():
     assert issubclass(easygoogle.oauth2, easygoogle._api_builder)
 
 
-def test_creation_call_server(mocker, tmpdir):
+def test_creation_call(mocker, tmpdir):
     mocker.patch.dict('easygoogle.apisDict', values=MOCKED_APIS)
     mocker.patch('easygoogle.InstalledAppFlow')
     mocker.patch('easygoogle.google')

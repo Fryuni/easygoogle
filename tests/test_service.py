@@ -30,17 +30,13 @@ def test_creation_call(mocker):
     mocker.stopall()
 
 
-def test_api_loading(mocker):
+def test_scoped_creation_call(mocker):
     mocker.patch.dict('easygoogle.apisDict', values=MOCKED_APIS)
     mocker.patch('easygoogle.google')
 
-    service = easygoogle.service_acc(mocker.sentinel.json_file, ['scope.unique', 'scope.multiple'])
+    service = easygoogle.service_acc(mocker.sentinel.json_file, ['scope.unique', 'scope.multiple', 'scope.invalid'])
 
-    assert service.valid_apis == {
-        'unique_api': ('unique_api', 'v1'),
-        'shared_api_a': ('shared_api_a', 'v1'),
-        'shared_api_b_namedversion': ('shared_api_b', 'namedversion_v1')
-    }
+    assert service.domain_wide == False
 
     test_target = easygoogle.google.oauth2.service_account.Credentials.from_service_account_file
 
@@ -61,6 +57,8 @@ def test_delegation(mocker):
 
     service = easygoogle.service_acc(mocker.sentinel.json_file, scopes=['scope.unique'], domainWide=True)
 
+    assert service.domain_wide == True
+
     delegated = service.delegate(mocker.sentinel.delegated_user)
 
     credentials_mock.with_subject.assert_called_once_with(mocker.sentinel.delegated_user)
@@ -78,6 +76,8 @@ def test_delegation_failure(mocker):
     easygoogle.google.oauth2.service_account.Credentials.from_service_account_file.return_value = credentials_mock
 
     service = easygoogle.service_acc(mocker.sentinel.json_file, scopes=[])
+
+    assert service.domain_wide == False
 
     delegated = service.delegate(mocker.sentinel.delegated_user)
     credentials_mock.with_subject.assert_not_called()
