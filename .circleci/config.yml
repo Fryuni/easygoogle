@@ -39,7 +39,9 @@ jobs:
           name: run tests on package
           command: |
             . venv/bin/activate
-            python -m pytest
+            echo "repo_token: ${COVERALLS_REPO_TOKEN}" > .coveralls.yml
+            python -m pytest --cov=easygoogle --cov-append --cov-config=.coveragerc -v
+            python -m coverage report --show-missing
 
       - run:
           name: Push to PyPi (if is tag)
