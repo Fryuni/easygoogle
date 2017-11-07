@@ -5,11 +5,12 @@ from setuptools import setup
 
 VERSION = environ.get('CIRCLE_TAG', '0.0.0.dev1')
 DOWNLOAD_URL = None
+VALID_DIST_TYPES = ("release", "beta", "alpha", "bugfix", "hotfix")
 DIST_TYPE = 'development'
 
 if 'CIRCLE_TAG' in environ:
     import re
-    match = re.match(r'^([a-z]+)-([0-9]+)\.([0-9]+)\.([0-9]+)(?:_.+)?$', VERSION)
+    match = re.match(r'^([a-z]+)-([0-9]+)\.([0-9]+)\.([0-9ab]+)(?:_.+)?$', VERSION)
     if match:
         VERSION = '.'.join(str(int(p)) for p in match.groups()[1:])
         DIST_TYPE = match.group(1)
