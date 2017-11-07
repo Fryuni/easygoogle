@@ -9,7 +9,7 @@ fi
 
 python3 -m easygoogle.config
 
-pip3 install twine wheel
+pip3 install -IU twine wheel
 
 python3 setup.py sdist
 python3 setup.py bdist_wheel --universal
