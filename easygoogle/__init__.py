@@ -200,8 +200,3 @@ class _delegated(_api_builder):
     def __init__(self, dCredentials, apis):
         self.valid_apis = apis
         self.credentials = dCredentials
-
-
-# Get comma separated list of scopes to use on the admin panel authorization
-def get_scopes(names):
-    return ','.join(apisDict[x]['scope'] for x in names)

@@ -13,7 +13,7 @@ apis = dict()
 
 
 # Configure valid apis and scopes from Google Documentation
-def config(test_mode=False):
+def config():
     global apis
     apis = dict()
 
@@ -63,10 +63,6 @@ def config(test_mode=False):
                     if match_scope:
                         setapiinfo(python_confirmed[match_header.group(1, 2)],
                                    match_scope.group(1))
-
-    # Return results in case of a test
-    if test_mode:
-        return apis
 
     # Save result configuration to pickle save file
     with open(join(dirname(__file__), 'apis.pk'), 'wb') as fl:
