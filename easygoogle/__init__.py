@@ -78,7 +78,7 @@ class _api_builder:
         # Build connector if API identifier is valid
         if api in self.valid_apis:
             res = googleapiclient.discovery.build(self.valid_apis[api][0], self.valid_apis[api][1],
-                                                  credentials=self.credentials, cache_discovery=False)
+                                                  credentials=self.__credentials, cache_discovery=False)
             logger.info("%s API Generated" % api)
             return res
         else:
@@ -153,14 +153,18 @@ class oauth2(_api_builder):
         else:
             credentials = google.oauth2.credentials.Credentials(**saved_state)
             credentials.refresh(google.auth.transport.requests.Request())
-        self.credentials = credentials
+        self.__credentials = credentials
+
+    @property
+    def credentials(self):
+        return self.__credentials
 
 
 # Handler for service account authentication
 class service_acc(_api_builder):
 
     # Instantiate handler
-    def __init__(self, service_file, scopes, manualScopes=[], domainWide=False, *args, **kwargs):
+    def __init__(self, service_file, scopes, manualScopes=[], domainWide=True, *args, **kwargs):
 
         # Load valid APIs unlocked with the scopes
         self._loadApiNames(scopes)
@@ -173,9 +177,17 @@ class service_acc(_api_builder):
         self.__domWide = domainWide
 
         # Acquire credentials from JSON keyfile
-        self.credentials = google.oauth2.service_account.Credentials.from_service_account_file(
+        self.__credentials = google.oauth2.service_account.Credentials.from_service_account_file(
             service_file, scopes=self.SCOPES)
         logger.debug("Credentials acquired")
+
+    @property
+    def credentials(self):
+        return self.__credentials
+
+    @credentials.setter
+    def credentials(self, newCredentials):
+        self.__credentials = newCredentials
 
     # Delegate authorization using application impersonation of authority
     def delegate(self, user):
