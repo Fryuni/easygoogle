@@ -78,7 +78,7 @@ class _api_builder:
         # Build connector if API identifier is valid
         if api in self.valid_apis:
             res = googleapiclient.discovery.build(self.valid_apis[api][0], self.valid_apis[api][1],
-                                                  credentials=self.__credentials, cache_discovery=False)
+                                                  credentials=self._credentials, cache_discovery=False)
             logger.info("%s API Generated" % api)
             return res
         else:
@@ -153,11 +153,11 @@ class oauth2(_api_builder):
         else:
             credentials = google.oauth2.credentials.Credentials(**saved_state)
             credentials.refresh(google.auth.transport.requests.Request())
-        self.__credentials = credentials
+        self._credentials = credentials
 
     @property
     def credentials(self):
-        return self.__credentials
+        return self._credentials
 
 
 # Handler for service account authentication
@@ -177,17 +177,17 @@ class service_acc(_api_builder):
         self.__domWide = domainWide
 
         # Acquire credentials from JSON keyfile
-        self.__credentials = google.oauth2.service_account.Credentials.from_service_account_file(
+        self._credentials = google.oauth2.service_account.Credentials.from_service_account_file(
             service_file, scopes=self.SCOPES)
         logger.debug("Credentials acquired")
 
     @property
     def credentials(self):
-        return self.__credentials
+        return self._credentials
 
     @credentials.setter
     def credentials(self, newCredentials):
-        self.__credentials = newCredentials
+        self._credentials = newCredentials
 
     # Delegate authorization using application impersonation of authority
     def delegate(self, user):
@@ -211,4 +211,4 @@ class service_acc(_api_builder):
 class _delegated(_api_builder):
     def __init__(self, dCredentials, apis):
         self.valid_apis = apis
-        self.credentials = dCredentials
+        self._credentials = dCredentials

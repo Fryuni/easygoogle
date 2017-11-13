@@ -16,15 +16,15 @@ class mock_class(easygoogle._api_builder):
 
     def __init__(self, scopes):
         self._loadApiNames(scopes)
-        self.__credentials = None
+        self._credentials = None
 
     @property
     def credentials(self):
-        return self.__credentials
+        return self._credentials
 
     @credentials.setter
     def credentials(self, newCred):
-        self.__credentials = newCred
+        self._credentials = newCred
 
 
 def test_api_loading(mocker):
