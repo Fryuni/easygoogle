@@ -36,7 +36,7 @@ def test_scoped_creation_call(mocker):
 
     service = easygoogle.service_acc(mocker.sentinel.json_file, ['scope.unique', 'scope.multiple', 'scope.invalid'])
 
-    assert service.domain_wide == False
+    assert service.domain_wide == True
 
     test_target = easygoogle.google.oauth2.service_account.Credentials.from_service_account_file
 
