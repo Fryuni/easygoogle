@@ -55,7 +55,7 @@ def test_delegation(mocker):
 
     easygoogle.google.oauth2.service_account.Credentials.from_service_account_file.return_value = credentials_mock
 
-    service = easygoogle.service_acc(mocker.sentinel.json_file, scopes=['scope.unique'], domainWide=True)
+    service = easygoogle.service_acc(mocker.sentinel.json_file, scopes=['scope.unique'])
 
     assert service.domain_wide == True
 
@@ -75,7 +75,7 @@ def test_delegation_failure(mocker):
     credentials_mock = mocker.MagicMock()
     easygoogle.google.oauth2.service_account.Credentials.from_service_account_file.return_value = credentials_mock
 
-    service = easygoogle.service_acc(mocker.sentinel.json_file, scopes=[])
+    service = easygoogle.service_acc(mocker.sentinel.json_file, scopes=[], domainWide=False)
 
     assert service.domain_wide == False
 
