@@ -10,7 +10,7 @@ DIST_TYPE = 'development'
 
 if 'CIRCLE_TAG' in environ:
     import re
-    match = re.match(r'^([a-z]+)-([0-9]+)\.([0-9]+)\.([0-9ab]+)(?:_.+)?$', VERSION)
+    match = re.match(r'^([a-z]+)-([0-9]+)\.([0-9]+)\.([0-9]+[ab]?[0-9]*)$', VERSION)
     if match:
         VERSION = '.'.join(str(int(p)) for p in match.groups()[1:])
         DIST_TYPE = match.group(1)

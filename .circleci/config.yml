@@ -50,6 +50,6 @@ deployment:
     # - https://discuss.circleci.com/t/build-on-tag/9864/30
     # - https://discuss.circleci.com/t/git-tag-deploys-in-2-0/9493/8
     # - https://circleci.com/gh/keybits/circulate/58#config/containers/0
-    tag: /^[a-z]+-[0-9]+\.[0-9]+\.[0-9ab]+(?:_.+)?$/
+    tag: /^[a-z]+-[0-9]+\.[0-9]+\.[0-9]+[ab]?[0-9]*$/
     commands:
       - true
