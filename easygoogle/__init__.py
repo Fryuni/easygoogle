@@ -15,12 +15,11 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 
 logger = logging.getLogger(__name__)
 
-# Load APIs versions, identifiers and scopes relations
-# from pickle file
-
 apisDict = {}
 
 
+# Load APIs versions, identifiers and scopes relations
+# from pickle file
 def loadApiDict():
     global apisDict
     with open(os.path.join(os.path.dirname(__file__), 'apis.pk'), 'rb') as fl:
@@ -103,57 +102,61 @@ class oauth2(_api_builder):
 
         # Home directory of the app
         home_dir = os.path.abspath(app_dir)
-        # Path to credentials files directory
-        self.credential_dir = os.path.join(home_dir, '.credentials')
-        # Create credentials directory if not exists
-        os.makedirs(self.credential_dir, exist_ok=True)
 
-        # Save app name
-        self.name = appname
-
-        # Construct file name
-        self.filename = ''.join(
-            map(chr, (x for x in self.name.encode() if x < 128))).lower()
-        self.filename = self.filename.replace(' ', '_') + '#' + user + ".json"
-
-        # Assemble full credential file path
-        self.credential_path = os.path.join(self.credential_dir, self.filename)
-
-        # Load saved credentials if the file exists
-        if os.path.isfile(self.credential_path):
-            saved_state = json.load(open(self.credential_path))
-            for s in self.SCOPES:
-                if s not in saved_state['scopes']:
-                    self.SCOPES = list(set(self.SCOPES + saved_state['scopes']))
-                    saved_state['valid']
-                    break
+        if secret_json == None:
+            self._credentials, self.projectId = google.auth.default()
         else:
-            saved_state = None
+            # Path to credentials files directory
+            self.credential_dir = os.path.join(home_dir, '.credentials')
+            # Create credentials directory if not exists
+            os.makedirs(self.credential_dir, exist_ok=True)
 
-        if saved_state == None:
-            # No valid credentials found
-            # Instantiate authrization flow
-            flow = InstalledAppFlow.from_client_secrets_file(secret_json, scopes=self.SCOPES)
+            # Save app name
+            self.name = appname
 
-            # Start web server to authorize application
-            credentials = flow.run_local_server(host=hostname, port=port)
-            credentials.refresh(google.auth.transport.requests.Request(session=flow.authorized_session()))
+            # Construct file name
+            self.filename = ''.join(
+                map(chr, (x for x in self.name.encode() if x < 128))).lower()
+            self.filename = self.filename.replace(' ', '_') + '#' + user + ".json"
 
-            saved_state = {
-                'refresh_token': credentials.refresh_token,
-                'client_id': credentials.client_id,
-                'client_secret': credentials.client_secret,
-                'token_uri': credentials.token_uri,
-                'id_token': credentials.id_token,
-                'scopes': list(credentials.scopes),
-                'token': credentials.token
-            }
+            # Assemble full credential file path
+            self.credential_path = os.path.join(self.credential_dir, self.filename)
 
-            json.dump(saved_state, open(self.credential_path, 'w'))
-        else:
-            credentials = google.oauth2.credentials.Credentials(**saved_state)
-            credentials.refresh(google.auth.transport.requests.Request())
-        self._credentials = credentials
+            # Load saved credentials if the file exists
+            if os.path.isfile(self.credential_path):
+                saved_state = json.load(open(self.credential_path))
+                for s in self.SCOPES:
+                    if s not in saved_state['scopes']:
+                        self.SCOPES = list(set(self.SCOPES + saved_state['scopes']))
+                        saved_state['valid']
+                        break
+            else:
+                saved_state = None
+
+            if saved_state == None:
+                # No valid credentials found
+                # Instantiate authrization flow
+                flow = InstalledAppFlow.from_client_secrets_file(secret_json, scopes=self.SCOPES)
+
+                # Start web server to authorize application
+                credentials = flow.run_local_server(host=hostname, port=port)
+                credentials.refresh(google.auth.transport.requests.Request(session=flow.authorized_session()))
+
+                saved_state = {
+                    'refresh_token': credentials.refresh_token,
+                    'client_id': credentials.client_id,
+                    'client_secret': credentials.client_secret,
+                    'token_uri': credentials.token_uri,
+                    'id_token': credentials.id_token,
+                    'scopes': list(credentials.scopes),
+                    'token': credentials.token
+                }
+
+                json.dump(saved_state, open(self.credential_path, 'w'))
+            else:
+                credentials = google.oauth2.credentials.Credentials(**saved_state)
+                credentials.refresh(google.auth.transport.requests.Request())
+            self._credentials = credentials
 
     @property
     def credentials(self):
