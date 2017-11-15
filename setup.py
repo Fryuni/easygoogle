@@ -10,6 +10,9 @@ DIST_TYPE = 'development'
 
 if 'CIRCLE_TAG' in environ:
     import re
+
+    DOWNLOAD_URL = 'https://github.com/Fryuni/easygoogle/archive/%s.tar.gz' % VERSION
+
     match = re.match(r'^([a-z]+)-([0-9]+)\.([0-9]+)\.([0-9]+[ab]?[0-9]*)$', VERSION)
     if match:
         VERSION = '.'.join(str(int(p)) for p in match.groups()[1:])
@@ -19,8 +22,6 @@ if 'CIRCLE_TAG' in environ:
 
     if DIST_TYPE not in VALID_DIST_TYPES:
         exit("Invalid tag prefix")
-
-    DOWNLOAD_URL = 'https://github.com/Fryuni/easygoogle/archive/%s.tar.gz' % VERSION
 
 
 setup(
@@ -35,9 +36,9 @@ setup(
     author="Luiz Augusto Ferraz",
     author_email="adm.fryuni@gmail.com",
     install_requires=["google-api-python-client (~=1.6.4)",
-                      'google-auth (~=1.2.0)',
-                      'google-auth-httplib2 (~=0.0.2)',
-                      'google-auth-oauthlib (~=0.1.1)'],
+                      'google-auth (~=1.2.1)',
+                      'google-auth-httplib2 (~=0.0.3)',
+                      'google-auth-oauthlib (~=0.2.0)'],
     url="https://github.com/Fryuni/easygoogle",
     download_url=DOWNLOAD_URL,
     keywords="google apis google-apis",
