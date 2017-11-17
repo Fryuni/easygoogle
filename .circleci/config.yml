@@ -48,7 +48,7 @@ jobs:
           name: Push to PyPi (if is tag)
           command: |
             . venv/bin/activate
-            pip uninstall easygoogle
+            pip uninstall easygoogle -y
             .circleci/twine_upload.sh
 
 deployment:
