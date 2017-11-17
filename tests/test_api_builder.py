@@ -8,12 +8,13 @@ __path__ = os.path.dirname(os.path.abspath(__file__))
 MOCKED_APIS = json.load(open(os.path.join(__path__, 'data', 'apis.json')))
 
 SCOPES = ['scope.unique', 'scope.multiple']
-RESULT_SCOPES = ["https://testscopes.exemple.org/auth/scope.multiple",
-                 "https://testscopes.exemple.org/auth/scope.unique"]
+RESULT_SCOPES = [
+    "https://testscopes.exemple.org/auth/scope.multiple",
+    "https://testscopes.exemple.org/auth/scope.unique"
+]
 
 
 class mock_class(easygoogle._api_builder):
-
     def __init__(self, scopes):
         self._loadApiNames(scopes)
         self._credentials = None
@@ -50,8 +51,11 @@ def test_api_generation(mocker):
 
     built = instance.get_api('unique_api')
 
-    easygoogle.googleapiclient.discovery.build.assert_called_once_with('unique_api', 'v1', cache_discovery=False,
-                                                                       credentials=mocker.sentinel.api_build_credentials)
+    easygoogle.googleapiclient.discovery.build.assert_called_once_with(
+        'unique_api',
+        'v1',
+        cache_discovery=False,
+        credentials=mocker.sentinel.api_build_credentials)
 
     assert built is mocker.sentinel.api_build_resource
 
@@ -68,4 +72,4 @@ def test_api_generation_failure(mocker):
     try:
         built = instance.get_api('no_api')
     except ValueError as e:
-        assert e.args == ("Invalid API identifier",)
+        assert e.args == ("Invalid API identifier", )
