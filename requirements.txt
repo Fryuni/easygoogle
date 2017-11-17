@@ -5,3 +5,4 @@ pytest-mock==1.6.3
 google-auth==1.2.1
 google-auth-oauthlib==0.2.0
 google-auth-httplib2==0.0.3
+python-coveralls==2.9.1
