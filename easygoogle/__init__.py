@@ -10,8 +10,9 @@ import google.oauth2.credentials
 import google.oauth2.service_account
 import googleapiclient
 import googleapiclient.discovery
-from easygoogle.config import config as updateApiCache
 from google_auth_oauthlib.flow import InstalledAppFlow
+
+from easygoogle.config import config as updateApiCache
 
 logger = logging.getLogger(__name__)
 
@@ -138,7 +139,7 @@ class oauth2(_api_builder):
                     if s not in saved_state['scopes']:
                         self.SCOPES = list(
                             set(self.SCOPES + saved_state['scopes']))
-                        saved_state['valid']
+                        saved_state = None
                         break
             else:
                 saved_state = None
