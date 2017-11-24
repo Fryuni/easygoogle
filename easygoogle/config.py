@@ -1,94 +1,44 @@
 import logging
 from os.path import dirname, join
-from pickle import dump, load
-from re import compile as rExcompile
-from re import findall
-from urllib.request import Request as req
-from urllib.request import urlopen as uopen
+from pickle import dump
+
+import googleapiclient.discovery
 
 logger = logging.getLogger("easygoogle.configurator")
 
-# Variable to control relations between scopes and APIs
-apis = dict()
 
-
-# Configure valid apis and scopes from Google Documentation
+# Configure valid apis and scopes from Google Discovery Documentation
 def config():
-    global apis
+    discoveryapi = googleapiclient.discovery.build('discovery', 'v1')
+    apisres = discoveryapi.apis()
+    allapis = apisres.list(fields='items(name,title,version)').execute()
     apis = dict()
 
-    # Read python native API support page
-    apiPageData = uopen(req('https://developers.google.com/api-client-library/python/apis/',
-                            headers={'User-Agent': 'easyGoogle'}))
+    for api in allapis['items']:
+        apiinfo = apisres.getRest(api=api['name'], version=api['version'],
+                                  fields='auth').execute()
 
-    # Search for all APIs identifiers and versions on page
-    findings = findall(
-        r"<td>(.+?)<\/td>\s+?<td>(.+?)<\/td>\s+?<td><a href=\"https:\/\/developers.google.com\/api-client-library.+?\">(.+?)<\/a><\/td>",
-        apiPageData.read().decode())
+        if 'auth' not in apiinfo:
+            continue
 
-    # Pair all API indentifiers with the respective versions
-    python_confirmed = {(x[0], x[2]): x for x in findings}
+        for scope in apiinfo['auth']['oauth2']['scopes'].keys():
+            name = scope.strip('/').split('/')[-1]
 
-    # Read full Google APIs scopes list page
-    scopePageData = uopen(req('https://developers.google.com/identity/protocols/googlescopes',
-                              headers={'User-Agent': 'easyGoogle'}))
+            logger.info("Configuring scope \"%s\" for \"%s\"..." % (name, api['title']))
 
-    # Compile regular expressions to identify API block
-    rx_header = rExcompile("\\s*<h2.*?<a href=.*?\">(.+? API)</a>, (.+?)</h2>")
-    # Compile regular expressions to extract scope
-    rx_scope = rExcompile("\\s*<tr>\\s*?<td>(.+?)</td>")
+            # If scope already registered, link to new API
+            if name in apis:
+                apis[name]['apis'].append(api)
 
-    # Iterates througth all lines of the scopes page source
-    while scopePageData.length > 0:
-        line = scopePageData.readline().decode()
-
-        # Match each line with the API block header
-        match_header = rx_header.match(line)
-
-        # Once found, process API
-        if match_header:
-            logger.debug("Header found: %s --> %s" % match_header.group(1, 2))
-
-            # Check if API version is supported by Google API client library
-            if match_header.group(1, 2) in python_confirmed:
-                logger.debug("Header is valid")
-
-                # If supported, extract and process all API scopes
-                while True:
-                    line = scopePageData.readline().decode()
-                    if line == "</table>\n":
-                        break
-
-                    match_scope = rx_scope.match(line)
-                    if match_scope:
-                        setapiinfo(python_confirmed[match_header.group(1, 2)],
-                                   match_scope.group(1))
+                # Else, register scope and link to API
+            else:
+                apis[name] = {'apis': [api], 'scope': scope}
 
     # Save result configuration to pickle save file
     with open(join(dirname(__file__), 'apis.pk'), 'wb') as fl:
         dump(apis, fl)
 
-    return apis
-
-
-# Link scope to API
-def setapiinfo(info, scope):
-    global apis
-    # Extract only meaningfull portion the scope link
-    name = scope.strip('/').split('/')[-1]
-
-    logger.info("Configuring scope \"%s\" for \"%s\"..." % (name, info[0]))
-
-    # If scope already registered, link to new API
-    if name in apis:
-        apis[name]['apis'].append({'name': info[1], 'version': info[2]})
-
-    # Else, register scope and link to API
-    else:
-        apis[name] = {'apis': [{'name': info[1], 'version': info[2]}], 'scope': scope}
-
-    # Also return the working api state
-    return apis[name]
+        return apis
 
 
 if __name__ == "__main__":
