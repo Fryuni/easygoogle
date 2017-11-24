@@ -77,8 +77,7 @@ class _api_builder:
             res = googleapiclient.discovery.build(
                 self.valid_apis[api][0],
                 self.valid_apis[api][1],
-                credentials=self._credentials,
-                cache_discovery=False)
+                credentials=self._credentials)
             logger.info("%s API Generated" % api)
             return res
         else:

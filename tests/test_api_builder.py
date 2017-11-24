@@ -54,7 +54,6 @@ def test_api_generation(mocker):
     easygoogle.googleapiclient.discovery.build.assert_called_once_with(
         'unique_api',
         'v1',
-        cache_discovery=False,
         credentials=mocker.sentinel.api_build_credentials)
 
     assert built is mocker.sentinel.api_build_resource
