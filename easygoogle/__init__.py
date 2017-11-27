@@ -10,9 +10,8 @@ import google.oauth2.credentials
 import google.oauth2.service_account
 import googleapiclient
 import googleapiclient.discovery
-from google_auth_oauthlib.flow import InstalledAppFlow
-
 from easygoogle.config import config as updateApiCache
+from google_auth_oauthlib.flow import InstalledAppFlow
 
 logger = logging.getLogger(__name__)
 
@@ -77,7 +76,9 @@ class _api_builder:
             res = googleapiclient.discovery.build(
                 self.valid_apis[api][0],
                 self.valid_apis[api][1],
-                credentials=self._credentials)
+                credentials=self._credentials,
+                cache_discovery=False,
+            )
             logger.info("%s API Generated" % api)
             return res
         else:
