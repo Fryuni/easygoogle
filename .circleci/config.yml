@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/python:2.7
+      - image: circleci/python:3.6
 
     working_directory: ~/repo
 
@@ -19,20 +19,20 @@ jobs:
       - run:
           name: install dependencies
           command: |
-            python -m virtualenv virtualenv
-            . virtualenv/bin/activate
+            python -m venv venv
+            . venv/bin/activate
             pip install -r requirements.txt
 
       - save_cache:
           paths:
-            - ./virtualenv
+            - ./venv
           key: v1-dependencies-{{ checksum "requirements.txt" }}
 
       # Prepare environment for test
       - run:
           name: validate setup.py and install package
           command: |
-            . virtualenv/bin/activate
+            . venv/bin/activate
             python setup.py check -sv
             python setup.py install
 
@@ -40,14 +40,14 @@ jobs:
       - run:
           name: run tests on package
           command: |
-            . virtualenv/bin/activate
+            . venv/bin/activate
             python -m pytest --cov=easygoogle --cov-append --cov-config=.coveragerc -v tests/
             coveralls
 
       - run:
           name: Push to PyPi (if is tag)
           command: |
-            . virtualenv/bin/activate
+            . venv/bin/activate
             pip uninstall easygoogle -y
             .circleci/twine_upload.sh
 
