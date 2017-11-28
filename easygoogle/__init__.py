@@ -1,7 +1,6 @@
 import json
 import logging
 import os
-import pickle
 from argparse import ArgumentParser
 from sys import argv
 
@@ -19,14 +18,14 @@ apisDict = {}
 
 
 # Load APIs versions, identifiers and scopes relations
-# from pickle file
+# from json file
 def loadApiDict():
     global apisDict
-    with open(os.path.join(os.path.dirname(__file__), 'apis.pk'), 'rb') as fl:
-        apisDict = pickle.load(fl)
+    with open(os.path.join(os.path.dirname(__file__), 'apis.json'), 'r') as fl:
+        apisDict = json.load(fl)
 
 
-if os.path.isfile(os.path.join(os.path.dirname(__file__), 'apis.pk')):
+if os.path.isfile(os.path.join(os.path.dirname(__file__), 'apis.json')):
     loadApiDict()
 
 

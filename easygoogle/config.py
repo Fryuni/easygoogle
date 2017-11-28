@@ -1,6 +1,6 @@
 import logging
+from json import dump
 from os.path import dirname, join
-from pickle import dump
 
 import googleapiclient.discovery
 
@@ -34,9 +34,9 @@ def config():
             else:
                 apis[name] = {'apis': [api], 'scope': scope}
 
-    # Save result configuration to pickle save file
-    with open(join(dirname(__file__), 'apis.pk'), 'wb') as fl:
-        dump(apis, fl, protocol=2)
+    # Save result configuration to json save file
+    with open(join(dirname(__file__), 'apis.json'), 'w') as fl:
+        dump(apis, fl)
 
         return apis
 
