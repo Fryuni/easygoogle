@@ -7,10 +7,10 @@ if [[ -z "$CIRCLE_TAG" ]]; then
   exit 0
 fi
 
-python3 -m easygoogle.config
+python -m easygoogle.config
 
-pip3 install -IU twine wheel
+pip install -IU twine wheel
 
-python3 setup.py sdist
-python3 setup.py bdist_wheel --universal
-python3 -m twine upload dist/*
+python setup.py sdist
+python setup.py bdist_wheel --universal
+python -m twine upload dist/*
