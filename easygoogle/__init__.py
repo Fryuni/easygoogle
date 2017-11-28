@@ -117,16 +117,18 @@ class oauth2(_api_builder):
             # Path to credentials files directory
             self.credential_dir = os.path.join(home_dir, '.credentials')
             # Create credentials directory if not exists
-            os.makedirs(self.credential_dir, exist_ok=True)
+            if not os.path.isdir(self.credential_dir):
+                os.makedirs(self.credential_dir)
 
             # Save app name
             self.name = appname
 
             # Construct file name
             self.filename = ''.join(
-                map(chr, (x for x in self.name.encode() if x < 128))).lower()
-            self.filename = self.filename.replace(' ',
-                                                  '_') + '#' + user + ".json"
+                e for e in self.name if e.isalnum() or e in ' _-'
+            ).lower().replace(
+                ' ', '_'
+            ) + '#' + user + ".json"
 
             # Assemble full credential file path
             self.credential_path = os.path.join(self.credential_dir,

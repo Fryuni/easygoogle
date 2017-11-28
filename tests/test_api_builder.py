@@ -19,14 +19,6 @@ class mock_class(easygoogle._api_builder):
         self._loadApiNames(scopes)
         self._credentials = None
 
-    @property
-    def credentials(self):
-        return self._credentials
-
-    @credentials.setter
-    def credentials(self, newCred):
-        self._credentials = newCred
-
 
 def test_api_loading(mocker):
     mocker.patch.dict('easygoogle.apisDict', values=MOCKED_APIS)
@@ -47,7 +39,7 @@ def test_api_generation(mocker):
     easygoogle.googleapiclient.discovery.build.return_value = mocker.sentinel.api_build_resource
 
     instance = mock_class(['scope.unique', 'scope.multiple', 'scope.invalid'])
-    instance.credentials = mocker.sentinel.api_build_credentials
+    instance._credentials = mocker.sentinel.api_build_credentials
 
     built = instance.get_api('unique_api')
 

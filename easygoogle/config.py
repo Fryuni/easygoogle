@@ -36,7 +36,7 @@ def config():
 
     # Save result configuration to pickle save file
     with open(join(dirname(__file__), 'apis.pk'), 'wb') as fl:
-        dump(apis, fl)
+        dump(apis, fl, protocol=2)
 
         return apis
 
