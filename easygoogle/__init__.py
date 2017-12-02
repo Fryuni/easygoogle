@@ -178,6 +178,10 @@ class oauth2(_api_builder):
     def credentials(self):
         return self._credentials
 
+    @classmethod
+    def default(cls):
+        return cls(None, ['cloud-platform'])
+
 
 # Handler for service account authentication
 class service_acc(_api_builder):
@@ -202,8 +206,14 @@ class service_acc(_api_builder):
         self.__domWide = domainWide
 
         # Acquire credentials from JSON keyfile
-        self._credentials = google.oauth2.service_account.Credentials.from_service_account_file(
-            service_file, scopes=self.SCOPES)
+        if service_file:
+            self._credentials = google.oauth2.service_account.Credentials.from_service_account_file(
+                service_file,
+                scopes=self.SCOPES,
+            )
+            self.projectId = self._credentials.project_id
+        else:
+            self._credentials, self.projectId = google.auth.default()
         logger.debug("Credentials acquired")
 
     @property
@@ -213,6 +223,10 @@ class service_acc(_api_builder):
     @credentials.setter
     def credentials(self, newCredentials):
         self._credentials = newCredentials
+
+    @classmethod
+    def default(cls, scopes=['cloud-platform'], **kwargs):
+        return cls(None, scopes, **kwargs)
 
     # Delegate authorization using application impersonation of authority
     def delegate(self, user):
