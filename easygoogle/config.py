@@ -9,7 +9,11 @@ logger = logging.getLogger("easygoogle.configurator")
 
 # Configure valid apis and scopes from Google Discovery Documentation
 def config():
-    discoveryapi = googleapiclient.discovery.build('discovery', 'v1')
+    discoveryapi = googleapiclient.discovery.build(
+        'discovery',
+        'v1',
+        cache_discovery=False,
+    )
     apisres = discoveryapi.apis()
     allapis = apisres.list(fields='items(name,title,version)').execute()
     apis = dict()
