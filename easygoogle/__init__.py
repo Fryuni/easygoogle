@@ -213,7 +213,7 @@ class service_acc(_api_builder):
             )
             self.projectId = self._credentials.project_id
         else:
-            self._credentials, self.projectId = google.auth.default()
+            self._credentials, self.projectId = google.auth.default().with_scopes(self.SCOPES)
         logger.debug("Credentials acquired")
 
     @property
