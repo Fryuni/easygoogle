@@ -155,7 +155,9 @@ class oauth2(_api_builder):
                 credentials = flow.run_local_server(host=hostname, port=port)
                 credentials.refresh(
                     google.auth.transport.requests.Request(
-                        session=flow.authorized_session()))
+                        session=flow.authorized_session(),
+                    ),
+                )
 
                 saved_state = {
                     'refresh_token': credentials.refresh_token,
@@ -164,14 +166,16 @@ class oauth2(_api_builder):
                     'token_uri': credentials.token_uri,
                     'id_token': credentials.id_token,
                     'scopes': list(credentials.scopes),
-                    'token': credentials.token
                 }
 
                 json.dump(saved_state, open(self.credential_path, 'w'))
             else:
                 credentials = google.oauth2.credentials.Credentials(
-                    **saved_state)
-                credentials.refresh(google.auth.transport.requests.Request())
+                    **saved_state,
+                )
+                credentials.refresh(
+                    google.auth.transport.requests.Request(),
+                )
             self._credentials = credentials
 
     @property
