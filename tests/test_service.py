@@ -3,9 +3,9 @@ import os
 
 import easygoogle
 
-__path__ = os.path.dirname(os.path.abspath(__file__))
+__local__ = os.path.dirname(os.path.abspath(__file__))
 
-MOCKED_APIS = json.load(open(os.path.join(__path__, 'data', 'apis.json')))
+MOCKED_APIS = json.load(open(os.path.join(__local__, 'data', 'apis.json')))
 
 SCOPES = ['scope.unique', 'scope.multiple']
 RESULT_SCOPES = ["https://testscopes.exemple.org/auth/scope.multiple",
