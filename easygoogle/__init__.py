@@ -65,16 +65,28 @@ class _api_builder:
                 # Process suffix when there are subidentifier in version
                 suffix = b['version'].split('_v')
                 suffix = "_" + suffix[0] if len(suffix) > 1 else ""
-                self.valid_apis[b['name'] + suffix] = (b['name'], b['version'])
+                api_tag = b['name'] + suffix
+                if api_tag in self.valid_apis:
+                    if b['preferred']:
+                        self.valid_apis[api_tag][1].insert(0, b['version'])
+                    else:
+                        self.valid_apis[api_tag][1].append(b['version'])
+                else:
+                    self.valid_apis[api_tag] = (b['name'], [b['version']])
+
+    def __call__(self, api, version=None):
+        return self.get_api(api, version)
 
     # Function to build connector based on API identifiers
-    def get_api(self, api):
+    def get_api(self, api, version=None):
 
         # Build connector if API identifier is valid
         if api in self.valid_apis:
+            if version is None:
+                version = self.valid_apis[api][1][-1]
             res = googleapiclient.discovery.build(
                 self.valid_apis[api][0],
-                self.valid_apis[api][1],
+                version,
                 credentials=self._credentials,
                 cache_discovery=False,
             )

@@ -15,12 +15,15 @@ def config():
         cache_discovery=False,
     )
     apisres = discoveryapi.apis()
-    allapis = apisres.list(fields='items(name,title,version)').execute()
+    allapis = apisres.list(fields='items(name,title,version,preferred)').execute()
     apis = dict()
 
     for api in allapis['items']:
-        apiinfo = apisres.getRest(api=api['name'], version=api['version'],
-                                  fields='auth').execute()
+        try:
+            apiinfo = apisres.getRest(api=api['name'], version=api['version'],
+                                      fields='auth').execute()
+        except Exception as e:
+            logger.exception(e)
 
         if 'auth' not in apiinfo:
             continue

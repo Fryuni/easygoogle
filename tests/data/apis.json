@@ -2,17 +2,24 @@
   "scope.unique": {
     "apis": [{
       "name": "unique_api",
-      "version": "v1"
+      "version": "v1",
+      "preferred": false
     }],
     "scope": "https://testscopes.exemple.org/auth/scope.unique"
   },
   "scope.multiple": {
     "apis": [{
       "name": "shared_api_a",
-      "version": "v1"
+      "version": "v1",
+      "preferred": true
     }, {
       "name": "shared_api_b",
-      "version": "namedversion_v1"
+      "version": "namedversion_v1",
+      "preferred": true
+    }, {
+      "name": "unique_api",
+      "version": "v3",
+      "preferred": true
     }],
     "scope": "https://testscopes.exemple.org/auth/scope.multiple"
   }

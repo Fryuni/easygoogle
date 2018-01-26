@@ -63,7 +63,7 @@ def test_delegation(mocker):
 
     credentials_mock.with_subject.assert_called_once_with(mocker.sentinel.delegated_user)
     assert delegated.valid_apis == {
-        'unique_api': ('unique_api', 'v1')
+        'unique_api': ('unique_api', ['v1'])
     }
 
 

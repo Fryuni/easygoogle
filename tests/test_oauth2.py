@@ -33,8 +33,7 @@ def test_creation_call(mocker, tmpdir):
         'client_secret': 'credentials.client_secret',
         'token_uri': 'credentials.token_uri',
         'id_token': 'credentials.id_token',
-        'scopes': ['list(credentials.scopes)'],
-        'token': 'credentials.token'
+        'scopes': ['list(credentials.scopes)']
     }
 
     credentials_mock = mocker.MagicMock()

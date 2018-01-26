@@ -26,9 +26,9 @@ def test_api_loading(mocker):
     instance = mock_class(['scope.unique', 'scope.multiple', 'scope.invalid'])
 
     assert instance.valid_apis == {
-        'unique_api': ('unique_api', 'v1'),
-        'shared_api_a': ('shared_api_a', 'v1'),
-        'shared_api_b_namedversion': ('shared_api_b', 'namedversion_v1')
+        'unique_api': ('unique_api', ['v3', 'v1']),
+        'shared_api_a': ('shared_api_a', ['v1']),
+        'shared_api_b_namedversion': ('shared_api_b', ['namedversion_v1'])
     }
 
 
