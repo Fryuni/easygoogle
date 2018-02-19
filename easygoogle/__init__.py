@@ -111,6 +111,7 @@ class oauth2(_api_builder):
                  manualScopes=[],
                  hostname='localhost',
                  port=None):
+        import socket
 
         # Load valid APIs unlocked with the scopes
         self._loadApiNames(scopes)
@@ -164,6 +165,11 @@ class oauth2(_api_builder):
                     secret_json, scopes=self.SCOPES)
 
                 # Start web server to authorize application
+                if port is None:
+                    tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    tcp.bind(('', 0))
+                    _, port = tcp.getsockname()
+                    tcp.close()
                 credentials = flow.run_local_server(host=hostname, port=port)
                 credentials.refresh(
                     google.auth.transport.requests.Request(
