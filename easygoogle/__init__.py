@@ -183,7 +183,7 @@ class oauth2(_api_builder):
                 json.dump(saved_state, open(self.credential_path, 'w'))
             else:
                 credentials = google.oauth2 \
-                    .credentials.Credentials(**saved_state)
+                    .credentials.Credentials(None, **saved_state)
                 credentials.refresh(
                     google.auth.transport.requests.Request(),
                 )
