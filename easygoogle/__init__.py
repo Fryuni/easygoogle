@@ -110,7 +110,7 @@ class oauth2(_api_builder):
                  app_dir='.',
                  manualScopes=[],
                  hostname='localhost',
-                 port=8080):
+                 port=0):
 
         # Load valid APIs unlocked with the scopes
         self._loadApiNames(scopes)
