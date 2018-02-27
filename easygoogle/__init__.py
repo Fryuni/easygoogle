@@ -1,7 +1,7 @@
 import json
 import logging
 import os
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
 from sys import argv
 
 import google.auth.transport.requests
@@ -27,6 +27,13 @@ def loadApiDict():
 
 if os.path.isfile(os.path.join(os.path.dirname(__file__), 'apis.json')):
     loadApiDict()
+
+AUTH = Namespace(
+    CONSOLE='auth-opt-1',
+    BROWSER='auth-opt-2',
+    SILENT='auth-opt-3',
+)
+__AUTH_OPTS = tuple(AUTH.__dict__.values())
 
 
 # Base class, loads API information and build the connectors with the credentials
@@ -110,7 +117,9 @@ class oauth2(_api_builder):
                  app_dir='.',
                  manualScopes=[],
                  hostname='localhost',
-                 port=None):
+                 port=None,
+                 auth_mode=AUTH.BROWSER):
+        assert auth_mode in __AUTH_OPTS
         import socket
 
         # Load valid APIs unlocked with the scopes
@@ -170,7 +179,15 @@ class oauth2(_api_builder):
                     tcp.bind(('', 0))
                     _, port = tcp.getsockname()
                     tcp.close()
-                credentials = flow.run_local_server(host=hostname, port=port)
+
+                if auth_mode == AUTH.CONSOLE:
+                    credentials = flow.run_console()
+                else:
+                    credentials = flow.run_local_server(
+                        host=hostname,
+                        port=port,
+                        open_browser=auth_mode == AUTH.BROWSER,
+                    )
                 credentials.refresh(
                     google.auth.transport.requests.Request(
                         session=flow.authorized_session(),
