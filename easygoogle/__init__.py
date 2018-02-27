@@ -33,7 +33,7 @@ AUTH = Namespace(
     BROWSER='auth-opt-2',
     SILENT='auth-opt-3',
 )
-__AUTH_OPTS = tuple(AUTH.__dict__.values())
+AUTH_OPTS = tuple(AUTH.__dict__.values())
 
 
 # Base class, loads API information and build the connectors with the credentials
@@ -119,7 +119,7 @@ class oauth2(_api_builder):
                  hostname='localhost',
                  port=None,
                  auth_mode=AUTH.BROWSER):
-        assert auth_mode in __AUTH_OPTS
+        assert auth_mode in AUTH_OPTS
         import socket
 
         # Load valid APIs unlocked with the scopes
