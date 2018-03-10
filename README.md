@@ -8,7 +8,8 @@
 
 _Google APIs python library wrapepr_
 
-Python package to make Google APIs more practical and easy to use
+Python package to make Google APIs more practical and easy to use  
+Wraps Google's official API library most used authentication and authorization flow
 
 Supports OAuth authentication and [service accounts](https://developers.google.com/identity/protocols/OAuth2ServiceAccount) (directly and with [domain wide delegation](https://developers.google.com/identity/protocols/OAuth2ServiceAccount#delegatingauthority))
 
@@ -31,11 +32,13 @@ To generate it, follow this steps:
 1. Select your application type, name it and click _Create_ (if you are running utilities scripts, you probably want the _Other_ type)
 1. Click OK on the popup, find the name you just used and click the download button at the right end of the line
 
+Alternatively, you can use the _application default credentials_ defined by _Google Cloud SDK_ command `gcloud auth application-default login`
+
 ###### To use a Service Account authentication:
 
 1. Click on the blue button **_Create credentials_** and select **_Service account key_**
 1. Select the service account you want to use or create a new one
-  - If you are going to use _Domain wide Delegatio_, you need to ensure the service account has the role **Project > Service Account Actor** as well as the requirements on the [official documentation](https://developers.google.com/identity/protocols/OAuth2ServiceAccount#delegatingauthority)
+  - If you are going to use _Domain wide Delegation_, you need to ensure the service account has the role **Project > Service Account Actor** and is authorized to impersonate the account of the GSuite Panel you want. Follow the [official documentation](https://developers.google.com/identity/protocols/OAuth2ServiceAccount#delegatingauthority) on how to do it.
 1. Select the keyfile type **JSON**
 1. Save the file
 
@@ -53,12 +56,21 @@ user = easygoogle.oauth2(
     app_dir='.', # Path to create subdir '.credentials' and store credentials files. Defaults to current working directory
     manualScopes=[], # Manually defined scopes for authorization. Used in Single Sign-On with servers that support OAuth authentication
     hostname='localhost', # Where to open authentication flow server
-    port=8080, # Which port to open authentication flow server in
+    port=None, # Which port to open authentication flow server in. Defaults to a random available port
+    auth_mode=easygoogle.AUTH.BROWSER, # Select authorization flow to be used in case of missing authorized credentials.
+    # Options are available on easygoogle.AUTH namespace:
+    # BROWSER -> Open the authorization page on default browser
+    # SILENTLY -> Shows the authorization link on stdout, but do not open browser automatically
+    # CONSOLE -> Shows the authorization link on stdout, but do not open browser automatically, and asks for authorization code on stdin
 )
+
+# To use the application default credentials from gcloud sdk
+user = easygoogle.oauth2.default()
 
 # Build API as the authenticated user
 api = user.get_api(
     apiname # API identifier
+    version=None, # API version. Defaults to primary version on Google Discovery Docs
 )
 ```
 
@@ -66,10 +78,13 @@ _Example:_
 ```Python
 import easygoogle
 
+# Build the easygoogle controller
 account_controller = easygoogle.oauth2('oauth_secret.json', ['drive'])
 
+# Build Drive API
 drive = account_controller.get_api('drive')
 
+# Print result from listing drive content
 print(drive.files().list().execute())
 ```
 
@@ -83,9 +98,17 @@ service = easygoogle.service_acc(
     manualScopes=[] # Manually defined scopes for authorization. Used in Single Sign-On with servers that support OAuth authentication
 )
 
+# To use application default credentials service account
+service = easygoogle.service_acc.default(
+    scopes=['cloud-platform'], # List of scopes identifiers,
+    domainWide=False, # Set true to enable the .delegate option
+    manualScopes=[] # Manually defined scopes for authorization. Used in Single Sign-On with servers that support OAuth authentication
+)
+
 # Build API as the service account
 api = service.get_api(
     apiname # API identifier
+    version=None, # API version. Defaults to primary version on Google Discovery Docs
 )
 
 
@@ -97,6 +120,7 @@ user = service.delegate(
 # Build API as the impersonated user
 api = user.get_api(
     apiname # API identifier
+    version=None, # API version. Defaults to primary version on Google Discovery Docs
 )
 ```
 
