@@ -110,7 +110,7 @@ class oauth2(_api_builder):
 
     # Main constructor function
     def __init__(self,
-                 secret_json,
+                 json_file,
                  scopes,
                  appname='Google Client Library - Python',
                  user="",
@@ -132,7 +132,7 @@ class oauth2(_api_builder):
         # Home directory of the app
         home_dir = os.path.abspath(app_dir)
 
-        if secret_json == None:
+        if json_file == None:
             self._credentials, self.projectId = google.auth.default()
         else:
             # Path to credentials files directory
@@ -171,7 +171,7 @@ class oauth2(_api_builder):
                 # No valid credentials found
                 # Instantiate authrization flow
                 flow = InstalledAppFlow.from_client_secrets_file(
-                    secret_json, scopes=self.SCOPES)
+                    json_file, scopes=self.SCOPES)
 
                 # Start web server to authorize application
                 if port is None:
