@@ -36,6 +36,32 @@ AUTH = Namespace(
 AUTH_OPTS = tuple(AUTH.__dict__.values())
 
 
+class _CONSTS(object):
+
+    def __setattr__(self, arg, val):
+        raise TypeError
+
+    def __delattr__(self, arg):
+        raise TypeError
+
+    @property
+    def DEFAULT_AUTH_OPT(self):
+        return getattr(
+            AUTH,
+            os.environ.get(
+                'EASYGOOGLE_DEFAULT_MODE',
+                'BROWSER'
+            )
+        )
+
+    @property
+    def ENFORCE_DEFAULT_OPT(self):
+        return os.environ.get('EASYGOOGLE_ENFORCE_AUTH_MODE') == 'ENFORCE'
+
+
+_CONSTS = _CONSTS()
+
+
 # Base class, loads API information and build the connectors with the credentials
 class _api_builder:
 
@@ -118,8 +144,10 @@ class oauth2(_api_builder):
                  manualScopes=[],
                  hostname='localhost',
                  port=None,
-                 auth_mode=AUTH.BROWSER):
+                 auth_mode=_CONSTS.DEFAULT_AUTH_OPT):
         assert auth_mode in AUTH_OPTS
+        if _CONSTS.ENFORCE_DEFAULT_OPT and auth_mode != _CONSTS.DEFAULT_AUTH_OPT:  # pragma: no cover
+            sys.stderr.write('Auth mode is enforced by environment, ignoring argument\n')
         import socket
 
         # Load valid APIs unlocked with the scopes
