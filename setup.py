@@ -34,7 +34,7 @@ setup(
         'easygoogle': ['apis.json']
     },
     author="Luiz Augusto Ferraz",
-    author_email="adm.fryuni@gmail.com",
+    author_email="luiz@lferraz.com",
     install_requires=["google-api-python-client (~=1.6.5)",
                       'google-auth (~=1.3.0)',
                       'google-auth-httplib2 (~=0.0.3)',
