@@ -8,7 +8,7 @@ logger = logging.getLogger("easygoogle.configurator")
 
 
 # Configure valid apis and scopes from Google Discovery Documentation
-def config():
+def config():  # pragma: no cover
     discoveryapi = googleapiclient.discovery.build(
         'discovery',
         'v1',

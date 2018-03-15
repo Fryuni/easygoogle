@@ -2,4 +2,5 @@
 fail_under = 70
 show_missing = True
 exclude_lines =
+    pragma: no[ _\-]?cover
     if __name__ == "__main__":
