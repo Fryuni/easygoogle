@@ -12,32 +12,27 @@ jobs:
       - run:
           name: install dependencies
           command: |
-            python -m venv venv
-            . venv/bin/activate
-            pip install -r requirements.txt
+            pipenv sync --dev
 
       # Prepare environment for test
       - run:
           name: validate setup.py and install package
           command: |
-            . venv/bin/activate
-            python setup.py check -sv
-            python setup.py install
+            pipenv run python setup.py check -sv
+            pipenv run python setup.py install
 
       # run tests!
       - run:
           name: run tests on package
           command: |
-            . venv/bin/activate
-            python -m pytest --cov=easygoogle --cov-append --cov-config=.coveragerc -v tests/
-            coveralls
+            pipenv run python -m pytest --cov=easygoogle --cov-append --cov-config=.coveragerc -v tests/
+            pipenv run coveralls
 
       - run:
           name: Push to PyPi (if is tag)
           command: |
-            . venv/bin/activate
-            pip uninstall easygoogle -y
-            .circleci/twine_upload.sh
+            pipenv clean
+            pipenv run .circleci/twine_upload.sh
 
 deployment:
   tag_build_for_cci2:
