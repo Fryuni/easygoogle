@@ -69,6 +69,34 @@ class _CONSTS(object):
         )
 
     @property
+    def DEFAULT_APP_DIR(self):
+        return os.environ.get(
+            'EASYGOOGLE_DEFAULT_APP_DIR',
+            '.'
+        )
+
+    @property
+    def DEFAULT_APP_NAME(self):
+        return os.environ.get(
+            'EASYGOOGLE_DEFAULT_APP_NAME',
+            'Google Client Library - Python'
+        )
+
+    @property
+    def DEFAULT_HOSTNAME(self):
+        return os.environ.get(
+            'EASYGOOGLE_DEFAULT_HOSTNAME',
+            'localhost'
+        )
+
+    @property
+    def DEFAULT_PORT(self):
+        return os.environ.get(
+            'EASYGOOGLE_DEFAULT_PORT',
+            None
+        )
+
+    @property
     def ENFORCE_DEFAULT_OPT(self):
         return os.environ.get('EASYGOOGLE_ENFORCE_AUTH_MODE') == 'ENFORCE'
 
@@ -152,12 +180,12 @@ class oauth2(_api_builder):
     def __init__(self,
                  json_file,
                  scopes,
-                 appname='Google Client Library - Python',
+                 appname=_CONSTS.DEFAULT_APP_NAME,
                  user="",
-                 app_dir='.',
+                 app_dir=_CONSTS.DEFAULT_APP_DIR,
                  manualScopes=[],
-                 hostname='localhost',
-                 port=None,
+                 hostname=_CONSTS.DEFAULT_HOSTNAME,
+                 port=_CONSTS.DEFAULT_PORT,
                  auth_mode=_CONSTS.DEFAULT_AUTH_OPT):
         assert auth_mode in AUTH_OPTS
         if _CONSTS.ENFORCE_DEFAULT_OPT and auth_mode != _CONSTS.DEFAULT_AUTH_OPT:  # pragma: no cover
@@ -172,7 +200,7 @@ class oauth2(_api_builder):
             set([x['scope'] for x in self.apis.values()] + manualScopes))
 
         # Home directory of the app
-        home_dir = os.path.abspath(app_dir)
+        home_dir = os.path.abspath(os.path.expanduser(app_dir))
 
         if json_file == None:
             self._credentials, self.projectId = google.auth.default()
