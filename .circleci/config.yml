@@ -12,7 +12,7 @@ jobs:
       - run:
           name: install dependencies
           command: |
-            pipenv --python 3.6 sync --dev
+            pipenv sync --dev
 
       # Prepare environment for test
       - run:
@@ -31,7 +31,6 @@ jobs:
       - run:
           name: Push to PyPi (if is tag)
           command: |
-            pipenv clean
             pipenv run .circleci/twine_upload.sh
 
 deployment:
