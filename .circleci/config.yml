@@ -12,7 +12,7 @@ jobs:
       - run:
           name: install dependencies
           command: |
-            pipenv sync --dev
+            pipenv --python 3.6 sync --dev
 
       # Prepare environment for test
       - run:
