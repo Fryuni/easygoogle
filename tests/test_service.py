@@ -18,7 +18,7 @@ def test_inheritance():
 
 
 def test_creation_call(mocker):
-    mocker.patch.dict('easygoogle.apisDict', values=MOCKED_APIS)
+    mocker.patch.dict('easygoogle.registeredApis', values=MOCKED_APIS)
     mocker.patch('easygoogle.google')
 
     service = easygoogle.service_acc(mocker.sentinel.json_file, [])
@@ -31,10 +31,11 @@ def test_creation_call(mocker):
 
 
 def test_scoped_creation_call(mocker):
-    mocker.patch.dict('easygoogle.apisDict', values=MOCKED_APIS)
+    mocker.patch.dict('easygoogle.registeredApis', values=MOCKED_APIS)
     mocker.patch('easygoogle.google')
 
-    service = easygoogle.service_acc(mocker.sentinel.json_file, ['scope.unique', 'scope.multiple', 'scope.invalid'])
+    service = easygoogle.service_acc(mocker.sentinel.json_file, [
+                                     'scope.unique', 'scope.multiple', 'scope.invalid'])
 
     assert service.domain_wide == True
 
@@ -48,34 +49,37 @@ def test_scoped_creation_call(mocker):
 
 
 def test_delegation(mocker):
-    mocker.patch.dict('easygoogle.apisDict', values=MOCKED_APIS)
+    mocker.patch.dict('easygoogle.registeredApis', values=MOCKED_APIS)
     mocker.patch('easygoogle.google')
 
     credentials_mock = mocker.MagicMock()
 
     easygoogle.google.oauth2.service_account.Credentials.from_service_account_file.return_value = credentials_mock
 
-    service = easygoogle.service_acc(mocker.sentinel.json_file, scopes=['scope.unique'])
+    service = easygoogle.service_acc(
+        mocker.sentinel.json_file, scopes=['scope.unique'])
 
     assert service.domain_wide == True
 
     delegated = service.delegate(mocker.sentinel.delegated_user)
 
-    credentials_mock.with_subject.assert_called_once_with(mocker.sentinel.delegated_user)
+    credentials_mock.with_subject.assert_called_once_with(
+        mocker.sentinel.delegated_user)
     assert delegated.valid_apis == {
         'unique_api': ('unique_api', ['v1'])
     }
 
 
 def test_delegation_failure(mocker):
-    mocker.patch.dict('easygoogle.apisDict', values=MOCKED_APIS)
+    mocker.patch.dict('easygoogle.registeredApis', values=MOCKED_APIS)
     mocker.patch('easygoogle.google')
 
     # Create mock for credentials
     credentials_mock = mocker.MagicMock()
     easygoogle.google.oauth2.service_account.Credentials.from_service_account_file.return_value = credentials_mock
 
-    service = easygoogle.service_acc(mocker.sentinel.json_file, scopes=[], domainWide=False)
+    service = easygoogle.service_acc(
+        mocker.sentinel.json_file, scopes=[], domainWide=False)
 
     assert service.domain_wide == False
 

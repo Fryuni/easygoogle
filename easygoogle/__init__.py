@@ -28,15 +28,15 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 
 logger = logging.getLogger(__name__)
 
-apisDict = {}
+registeredApis = {}
 
 
 # Load APIs versions, identifiers and scopes relations
 # from json file
 def loadApiDict():
-    global apisDict
+    global registeredApis
     with open(os.path.join(os.path.dirname(__file__), 'apis.json'), 'r') as fl:
-        apisDict = json.load(fl)
+        registeredApis = json.load(fl)
 
 
 if os.path.isfile(os.path.join(os.path.dirname(__file__), 'apis.json')):
@@ -116,7 +116,7 @@ class _api_builder:
         for x in list(set(scopes)):
             try:
                 # Load scope relations descriptor
-                apiset[x] = apisDict[x]
+                apiset[x] = registeredApis[x]
             except KeyError:
                 # Log when scope not found
                 logger.warning("[!] SCOPE %s not registered" % x)

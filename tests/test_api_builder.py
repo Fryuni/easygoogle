@@ -21,7 +21,7 @@ class mock_class(easygoogle._api_builder):
 
 
 def test_api_loading(mocker):
-    mocker.patch.dict('easygoogle.apisDict', values=MOCKED_APIS)
+    mocker.patch.dict('easygoogle.registeredApis', values=MOCKED_APIS)
 
     instance = mock_class(['scope.unique', 'scope.multiple', 'scope.invalid'])
 
@@ -33,7 +33,7 @@ def test_api_loading(mocker):
 
 
 def test_api_generation(mocker):
-    mocker.patch.dict('easygoogle.apisDict', values=MOCKED_APIS)
+    mocker.patch.dict('easygoogle.registeredApis', values=MOCKED_APIS)
     mocker.patch('easygoogle.googleapiclient')
 
     easygoogle.googleapiclient.discovery.build.return_value = mocker.sentinel.api_build_resource
@@ -54,7 +54,7 @@ def test_api_generation(mocker):
 
 
 def test_api_generation_failure(mocker):
-    mocker.patch.dict('easygoogle.apisDict', values=MOCKED_APIS)
+    mocker.patch.dict('easygoogle.registeredApis', values=MOCKED_APIS)
     mocker.patch('easygoogle.googleapiclient')
 
     easygoogle.googleapiclient.discovery.build.return_value = mocker.sentinel.api_build_resource

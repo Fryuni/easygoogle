@@ -19,7 +19,7 @@ def test_inheritance():
 
 
 def test_creation_call(mocker, tmpdir):
-    mocker.patch.dict('easygoogle.apisDict', values=MOCKED_APIS)
+    mocker.patch.dict('easygoogle.registeredApis', values=MOCKED_APIS)
     mocker.patch('easygoogle.InstalledAppFlow')
     mocker.patch('easygoogle.google')
     mocker.patch('easygoogle.os.path.isfile', return_value=False)
@@ -66,10 +66,11 @@ def test_creation_call(mocker, tmpdir):
 
 
 def test_creation_from_default(mocker):
-    mocker.patch.dict('easygoogle.apisDict', values=MOCKED_APIS)
+    mocker.patch.dict('easygoogle.registeredApis', values=MOCKED_APIS)
     mocker.patch('easygoogle.google')
 
-    easygoogle.google.auth.default.return_value = (mocker.sentinel.credentials, mocker.sentinel.project)
+    easygoogle.google.auth.default.return_value = (
+        mocker.sentinel.credentials, mocker.sentinel.project)
 
     oauth = easygoogle.oauth2(None, ['scope.unique'])
 
