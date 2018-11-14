@@ -17,27 +17,43 @@ from json import dump
 from os.path import dirname, join
 
 import googleapiclient.discovery
+import progressbar
 
-logger = logging.getLogger("easygoogle.configurator")
+progressbar.streams.wrap_stderr()
+
+logger = logging.getLogger(__name__)
 
 
 # Configure valid apis and scopes from Google Discovery Documentation
-def config():  # pragma: no cover
+def config(progress=False):  # pragma: no cover
     discoveryapi = googleapiclient.discovery.build(
         'discovery',
         'v1',
         cache_discovery=False,
     )
     apisres = discoveryapi.apis()
-    allapis = apisres.list(fields='items(name,title,version,preferred)').execute()
+    allapis = apisres.list(
+        fields='items(name,title,version,preferred)'
+    ).execute()
     apis = dict()
 
-    for api in allapis['items']:
+    if progress:
+        iterator = progressbar.progressbar(
+            allapis['items'], prefix="Looking up APIs",
+            redirect_stdout=True, redirect_stderr=True,
+        )
+    else:
+        iterator = allapis['items']
+
+    for api in iterator:
         try:
             apiinfo = apisres.getRest(api=api['name'], version=api['version'],
                                       fields='auth').execute()
         except Exception as e:
-            logger.exception(e)
+            logger.warning(
+                "Could not acquire openapi document for api '%s' version '%s'",
+                api['name'], api['version']
+            )
 
         if 'auth' not in apiinfo:
             continue
@@ -45,7 +61,8 @@ def config():  # pragma: no cover
         for scope in apiinfo['auth']['oauth2']['scopes'].keys():
             name = scope.strip('/').split('/')[-1]
 
-            logger.info("Configuring scope \"%s\" for \"%s\"..." % (name, api['title']))
+            logger.info("Configuring scope \"%s\" for \"%s\"...",
+                        name, api['title'])
 
             # If scope already registered, link to new API
             if name in apis:
@@ -62,10 +79,16 @@ def config():  # pragma: no cover
         return apis
 
 
-if __name__ == "__main__":
-
+def main():
     # Instantiate basic logging
-    logging.basicConfig(level=logging.INFO, format="[%(name)-20s][%(levelname)-8s]:%(asctime)s: %(message)s")
+    logging.basicConfig(
+        level=logging.INFO,
+        format="[%(name)-20s][%(levelname)-8s]:%(asctime)s: %(message)s",
+    )
 
     # Start configuration
-    config()
+    config(True)
+
+
+if __name__ == "__main__":
+    main()

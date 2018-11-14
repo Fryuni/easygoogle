@@ -13,7 +13,9 @@ if 'CIRCLE_TAG' in environ:
 
     DOWNLOAD_URL = 'https://github.com/Fryuni/easygoogle/archive/%s.tar.gz' % VERSION
 
-    match = re.match(r'^([a-z]+)-([0-9]+)\.([0-9]+)\.([0-9]+[ab]?[0-9]*)$', VERSION)
+    match = re.match(
+        r'^([a-z]+)-([0-9]+)\.([0-9]+)\.([0-9]+[ab]?[0-9]*)$', VERSION
+    )
     if match:
         VERSION = '.'.join(str(int(p)) for p in match.groups()[1:])
         DIST_TYPE = match.group(1)
@@ -40,10 +42,16 @@ setup(
         'google-auth (~=1.4.1)',
         'google-auth-httplib2 (~=0.0.3)',
         'google-auth-oauthlib (~=0.2.0)',
+        'progressbar2 (~=3.38.0)',
     ],
     url="https://github.com/Fryuni/easygoogle",
     download_url=DOWNLOAD_URL,
     keywords="google apis google-apis",
+    entry_points={
+        'console_scripts': [
+            'easygoogle_refreshapis=easygoogle.config:main',
+        ],
+    },
     classifiers=["Development Status :: 5 - Production/Stable",
                  "Intended Audience :: Developers",
                  "Intended Audience :: Education",
