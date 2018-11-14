@@ -4,16 +4,17 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-google-api-python-client = "~=1.6.5"
-google-auth = "~=1.4.1"
+google-api-python-client = "~=1.7.4"
+google-auth = "~=1.4.2"
 google-auth-oauthlib = "~=0.2.0"
 "google-auth-httplib2" = "~=0.0.3"
+"progressbar2" = "*"
 
 [dev-packages]
-pytest = ">=3.4.2"
-pytest-cov = ">=2.5.1"
-pytest-mock = ">=1.7.1"
-# python-coveralls = ">=2.9.1"
+pytest = "*"
+pytest-cov = "*"
+pytest-mock = "*"
+# python-coveralls = "*"
 
 [requires]
-python_version = "3.6"
+python_version = "3.7"
