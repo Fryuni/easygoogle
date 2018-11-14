@@ -47,7 +47,7 @@ def test_api_generation(mocker):
         'unique_api',
         'v1',
         credentials=mocker.sentinel.api_build_credentials,
-        cache_discovery=False,
+        cache_discovery=True,
     )
 
     assert built is mocker.sentinel.api_build_resource

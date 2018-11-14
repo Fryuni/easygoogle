@@ -163,7 +163,7 @@ class _api_builder:
                 self.valid_apis[api][0],
                 version,
                 credentials=self._credentials,
-                cache_discovery=False,
+                cache_discovery=True,
             )
             logger.info("%s API Generated" % api)
             return res
