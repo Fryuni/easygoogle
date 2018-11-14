@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import json
 import logging
 import os
@@ -22,8 +21,10 @@ import google.oauth2.credentials
 import google.oauth2.service_account
 import googleapiclient
 import googleapiclient.discovery
-from easygoogle.config import config as updateApiCache
 from google_auth_oauthlib.flow import InstalledAppFlow
+
+from ._patch_resources import applyPatch
+from .config import config as updateApiCache
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +38,9 @@ def loadApiDict():
     with open(os.path.join(os.path.dirname(__file__), 'apis.json'), 'r') as fl:
         registeredApis = json.load(fl)
 
+
+if not os.environ.get("EASYGOOGLE_NO_AUTO_PATCH_RESOURCES"):
+    applyPatch()
 
 if os.path.isfile(os.path.join(os.path.dirname(__file__), 'apis.json')):
     loadApiDict()
