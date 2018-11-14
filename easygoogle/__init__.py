@@ -15,8 +15,7 @@
 import json
 import logging
 import os
-from argparse import ArgumentParser, Namespace
-from sys import argv
+from argparse import Namespace
 
 import google.auth.transport.requests
 import google.oauth2.credentials
