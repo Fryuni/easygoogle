@@ -1,8 +1,9 @@
 plugins:
   grep:
     enabled: false
+    config:
   pep8:
     enabled: true
   pylint:
-    enabled: true
+    enabled: false
     channel: "beta"
