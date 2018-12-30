@@ -19,9 +19,13 @@ from json import dump
 from os.path import dirname, join
 
 import googleapiclient.discovery
-import progressbar
+try:
+    import progressbar
+except ImportError:
+    progressbar = None
 
-progressbar.streams.wrap_stderr()
+if progressbar is not None:
+    progressbar.streams.wrap_stderr()
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +43,7 @@ def config(progress=False):  # pragma: no cover
     ).execute()
     apis = dict()
 
-    if progress:
+    if progress and progressbar is not None:
         iterator = progressbar.progressbar(
             allapis['items'], prefix="Looking up APIs",
             redirect_stdout=True, redirect_stderr=True,
