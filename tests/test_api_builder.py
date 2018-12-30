@@ -51,6 +51,7 @@ def test_api_loading(mocker):
 def test_api_generation(mocker):
     mocker.patch.dict('easygoogle.registeredApis', values=MOCKED_APIS)
     mocker.patch('easygoogle.googleapiclient')
+    easygoogle.DEFAULT_CACHE = mocker.sentinel.CACHE_SERVICE
 
     easygoogle.googleapiclient.discovery.build.return_value = mocker.sentinel.api_build_resource
 
@@ -64,6 +65,7 @@ def test_api_generation(mocker):
         'v1',
         credentials=mocker.sentinel.api_build_credentials,
         cache_discovery=True,
+        cache=mocker.sentinel.CACHE_SERVICE,
     )
 
     assert built is mocker.sentinel.api_build_resource

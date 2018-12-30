@@ -29,6 +29,14 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from ._patch_resources import applyPatch
 from .config import config as updateApiCache
 
+
+# Try to import appengine memcache as the default cache option
+try:
+    from google.appengine.api import memcache as DEFAULT_CACHE
+except ImportError:
+    from cachetools import LFUCache as DEFAULT_CACHE
+    DEFAULT_CACHE = DEFAULT_CACHE(20)
+
 logger = logging.getLogger(__name__)
 
 registeredApis = {}
@@ -155,11 +163,14 @@ class _api_builder:
                 else:
                     self.valid_apis[api_tag] = (b['name'], [b['version']])
 
-    def __call__(self, api, version=None):
+    def __call__(self, api, version=None, cache=None):
         return self.get_api(api, version)
 
     # Function to build connector based on API identifiers
-    def get_api(self, api, version=None):
+    def get_api(self, api, version=None, cache=None):
+
+        if cache is None:
+            cache = DEFAULT_CACHE
 
         # Build connector if API identifier is valid
         if api in self.valid_apis:
@@ -169,7 +180,8 @@ class _api_builder:
                 self.valid_apis[api][0],
                 version,
                 credentials=self._credentials,
-                cache_discovery=True,
+                cache_discovery=cache is not None,
+                cache=cache,
             )
             logger.info("%s API Generated" % api)
             return res
@@ -239,22 +251,17 @@ class oauth2(_api_builder):
 
         # Load saved credentials if the file exists
         if os.path.isfile(self.credential_path):
-            saved_state = self.__loadCredentialsFromFile(self.credential_path)
+            saved_state = self.__loadStateFromFile(self.credential_path)
         else:
             saved_state = None
 
-        if saved_state == None:
-            self.__runAuthenticationFlow(json_file)
+        if saved_state is None:
+            credentials = self.__runAuthenticationFlow(json_file)
         else:
-            self.__credentialsFromSavedState(saved_state)
-            credentials = google.oauth2 \
-                .credentials.Credentials(None, **saved_state)
-            credentials.refresh(
-                google.auth.transport.requests.Request(),
-            )
+            credentials = self.__credentialsFromSavedState(saved_state)
         self._credentials = credentials
 
-    def __loadCredentialsFromFile(self, credential_path):
+    def __loadStateFromFile(self, credential_path):
         saved_state = json.load(open(credential_path))
         saved_scopes = set(saved_state['scopes'])
         cur_scopes = set(self.SCOPES)
@@ -262,6 +269,14 @@ class oauth2(_api_builder):
             self.scopes = list(saved_scopes.union(cur_scopes))
             saved_state = None
         return saved_state
+
+    def __credentialsFromSavedState(self, saved_state):
+        credentials = google.oauth2 \
+            .credentials.Credentials(None, **saved_state)
+        credentials.refresh(
+            google.auth.transport.requests.Request(),
+        )
+        return credentials
 
     def __runAuthenticationFlow(self, json_file):
         # No valid credentials found
@@ -301,7 +316,7 @@ class oauth2(_api_builder):
         }
 
         json.dump(saved_state, open(self.credential_path, 'w'))
-        self._credentials = credentials
+        return credentials
 
     @property
     def credentials(self):
