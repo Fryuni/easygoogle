@@ -42,6 +42,7 @@ def test_creation_call(mocker, tmpdir):
     mocker.patch('easygoogle.json')
     open_mock = mocker.mock_open()
     mocker.patch('easygoogle.open', open_mock, create=True)
+    easygoogle.six.string_types = (type(mocker.sentinel.json_file),)
 
     model_spec = {
         'refresh_token': 'credentials.refresh_token',

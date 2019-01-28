@@ -36,6 +36,7 @@ def test_inheritance():
 def test_creation_call(mocker):
     mocker.patch.dict('easygoogle.registeredApis', values=MOCKED_APIS)
     mocker.patch('easygoogle.google')
+    easygoogle.six.string_types = (type(mocker.sentinel.json_file),)
 
     service = easygoogle.service_acc(mocker.sentinel.json_file, [])
 
