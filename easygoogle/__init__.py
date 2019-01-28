@@ -24,17 +24,18 @@ import google.oauth2.credentials
 import google.oauth2.service_account
 import googleapiclient
 import googleapiclient.discovery
+import six
 from google_auth_oauthlib.flow import InstalledAppFlow
 
 from ._patch_resources import applyPatch
 from .config import config as updateApiCache
-
 
 # Try to import appengine memcache as the default cache option
 try:
     from google.appengine.api import memcache as DEFAULT_CACHE
 except ImportError:
     from cachetools import LFUCache as DEFAULT_CACHE
+
     DEFAULT_CACHE = DEFAULT_CACHE(20)
 
 logger = logging.getLogger(__name__)
@@ -196,7 +197,7 @@ class oauth2(_api_builder):
 
     # Main constructor function
     def __init__(self,
-                 json_file,
+                 client_secrets,
                  scopes,
                  appname=_CONSTS.DEFAULT_APP_NAME,
                  user="",
@@ -223,12 +224,12 @@ class oauth2(_api_builder):
         self.__auth_port = port
         self.__auth_mode = auth_mode
 
-        if json_file == None:
+        if client_secrets == None:
             self._credentials, self.projectId = google.auth.default()
         else:
-            self.__acquireCredentials(json_file, home_dir, appname, user)
+            self.__acquireCredentials(client_secrets, home_dir, appname, user)
 
-    def __acquireCredentials(self, json_file, home_dir, appname, user):
+    def __acquireCredentials(self, client_secrets, home_dir, appname, user):
         # Path to credentials files directory
         self.credential_dir = os.path.join(home_dir, '.credentials')
         # Create credentials directory if not exists
@@ -256,7 +257,7 @@ class oauth2(_api_builder):
             saved_state = None
 
         if saved_state is None:
-            credentials = self.__runAuthenticationFlow(json_file)
+            credentials = self.__runAuthenticationFlow(client_secrets)
         else:
             credentials = self.__credentialsFromSavedState(saved_state)
         self._credentials = credentials
@@ -278,11 +279,17 @@ class oauth2(_api_builder):
         )
         return credentials
 
-    def __runAuthenticationFlow(self, json_file):
+    def __runAuthenticationFlow(self, client_secrets):
         # No valid credentials found
         # Instantiate authrization flow
-        flow = InstalledAppFlow.from_client_secrets_file(
-            json_file, scopes=self.SCOPES)
+        if isinstance(client_secrets, six.string_types):
+            flow = InstalledAppFlow.from_client_secrets_file(
+                client_secrets, scopes=self.SCOPES
+            )
+        else:
+            flow = InstalledAppFlow.from_client_config(
+                client_secrets, scopes=self.SCOPES,
+            )
 
         # Start web server to authorize application
         if self.__auth_port is None:
@@ -350,11 +357,17 @@ class service_acc(_api_builder):
         self.__domWide = domainWide
 
         # Acquire credentials from JSON keyfile
-        if service_file:
-            self._credentials = google.oauth2.service_account.Credentials.from_service_account_file(
-                service_file,
-                scopes=self.SCOPES,
-            )
+        if service_file is not None:
+            if isinstance(service_file, six.string_types):
+                self._credentials = google.oauth2.service_account.Credentials.from_service_account_file(
+                    service_file,
+                    scopes=self.SCOPES,
+                )
+            else:
+                self._credentials = google.oauth2.service_account.Credentials.from_service_account_info(
+                    service_file,
+                    scopes=self.SCOPES,
+                )
             self.projectId = self._credentials.project_id
         else:
             self._credentials, self.projectId = google.auth.default()
