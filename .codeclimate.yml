@@ -1,7 +1,8 @@
+version: 2
 plugins:
   grep:
     enabled: false
-    config:
+    config: ''
   pep8:
     enabled: true
   pylint:
