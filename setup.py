@@ -53,11 +53,9 @@ setup(
     author="Luiz Augusto Ferraz",
     author_email="luiz@lferraz.com",
     install_requires=[
-        "google-api-python-client (~=1.6.5)",
-        'google-auth (~=1.4.1)',
-        'google-auth-httplib2 (~=0.0.3)',
+        "google-api-python-client (~=1.7.8)",
+        'google-auth (~=1.6.2)',
         'google-auth-oauthlib (~=0.2.0)',
-        'progressbar2 (~=3.38.0)',
     ],
     url="https://github.com/Fryuni/easygoogle",
     download_url=DOWNLOAD_URL,
