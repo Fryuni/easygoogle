@@ -1,5 +1,3 @@
-
-
 #  Copyright 2017-2018 Luiz Augusto Alves Ferraz
 #  .
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,7 +15,8 @@
 import json
 import os
 
-import easygoogle
+import easygoogle.controllers.base
+import easygoogle.controllers.oauth2
 
 __local__ = os.path.dirname(os.path.abspath(__file__))
 
@@ -31,18 +30,23 @@ RESULT_SCOPES = [
 
 
 def test_inheritance():
-    assert issubclass(easygoogle.oauth2, easygoogle._api_builder)
+    assert issubclass(easygoogle.controllers.oauth2.oauth2, easygoogle.controllers.base._api_builder)
 
 
 def test_creation_call(mocker, tmpdir):
-    mocker.patch.dict('easygoogle.registeredApis', values=MOCKED_APIS)
-    mocker.patch('easygoogle.InstalledAppFlow')
-    mocker.patch('easygoogle.google')
-    mocker.patch('easygoogle.os.path.isfile', return_value=False)
-    mocker.patch('easygoogle.json')
+    mocker.patch.dict('easygoogle.controllers.base.registeredApis', values=MOCKED_APIS)
+    mocked_flow = mocker.patch('easygoogle.controllers.oauth2.InstalledAppFlow')
+    mocked_google = mocker.patch('easygoogle.controllers.oauth2.google')
+    mocked_isfile = mocker.patch('easygoogle.controllers.oauth2.os.path.isfile', autospec=True)
+    mocked_json = mocker.patch('easygoogle.controllers.oauth2.json')
+
     open_mock = mocker.mock_open()
-    mocker.patch('easygoogle.open', open_mock, create=True)
-    easygoogle.six.string_types = (type(mocker.sentinel.json_file),)
+    mocker.patch('easygoogle.controllers.oauth2.open', open_mock, create=True)
+
+    mocked_isfile.return_value = False
+
+    mocked_six = mocker.patch('easygoogle.controllers.oauth2.six')
+    mocked_six.string_types = (type(mocker.sentinel.json_file),)
 
     model_spec = {
         'refresh_token': 'credentials.refresh_token',
@@ -55,17 +59,15 @@ def test_creation_call(mocker, tmpdir):
 
     credentials_mock = mocker.MagicMock()
     credentials_mock.configure_mock(**model_spec)
-    easygoogle.InstalledAppFlow.from_client_secrets_file.return_value = (
-        easygoogle.InstalledAppFlow())
-    easygoogle.InstalledAppFlow().run_local_server.return_value = (
-        credentials_mock)
+    mocked_flow.from_client_secrets_file.return_value = mocked_flow()
+    mocked_flow().run_local_server.return_value = credentials_mock
 
-    oauth = easygoogle.oauth2(
+    oauth = easygoogle.controllers.oauth2.oauth2(
         mocker.sentinel.json_file, ['scope.unique'],
         user="testuser",
         app_dir=str(tmpdir.dirpath()))
 
-    easygoogle.InstalledAppFlow.from_client_secrets_file.assert_called_once_with(
+    mocked_flow.from_client_secrets_file.assert_called_once_with(
         mocker.sentinel.json_file,
         scopes=["https://testscopes.exemple.org/auth/scope.unique"])
 
@@ -74,21 +76,21 @@ def test_creation_call(mocker, tmpdir):
             tmpdir.dirpath('.credentials',
                            'google_client_library_-_python#testuser.json')),
         'w')
-    easygoogle.json.dump.assert_called_once_with(model_spec, open_mock())
+    mocked_json.dump.assert_called_once_with(model_spec, open_mock())
 
-    credentials_mock.refresh.assert_called_once_with(
-        easygoogle.google.auth.transport.requests.Request())
+    credentials_mock.refresh.assert_called_once_with(mocked_google.auth.transport.requests.Request())
 
     assert oauth.credentials is credentials_mock
 
 
 def test_creation_from_default(mocker):
-    mocker.patch.dict('easygoogle.registeredApis', values=MOCKED_APIS)
-    mocker.patch('easygoogle.google')
+    mocker.patch.dict('easygoogle.controllers.base.registeredApis', values=MOCKED_APIS)
+    mocked_google = mocker.patch('easygoogle.controllers.oauth2.google', autospec=True)
 
-    easygoogle.google.auth.default.return_value = (
-        mocker.sentinel.credentials, mocker.sentinel.project)
+    mocked_google.auth.default.return_value = (
+        mocker.sentinel.credentials, mocker.sentinel.project
+    )
 
-    oauth = easygoogle.oauth2(None, ['scope.unique'])
+    oauth = easygoogle.controllers.oauth2.oauth2(None, ['scope.unique'])
 
     assert oauth.credentials is mocker.sentinel.credentials

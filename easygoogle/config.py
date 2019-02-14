@@ -1,5 +1,3 @@
-
-
 #  Copyright 2017-2018 Luiz Augusto Alves Ferraz
 #  .
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,12 +11,16 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-
+#
+# -*- coding: utf-8 -*-
+import json
 import logging
+import os
 from json import dump
 from os.path import dirname, join
 
 import googleapiclient.discovery
+
 try:
     import progressbar
 except ImportError:
@@ -83,6 +85,13 @@ def config(progress=False):  # pragma: no cover
         dump(apis, fl)
 
         return apis
+
+
+# Load APIs versions, identifiers and scopes relations
+# from json file
+def load_api_dict():
+    with open(os.path.join(os.path.dirname(__file__), 'apis.json'), 'r') as fl:
+        return json.load(fl)
 
 
 def main():

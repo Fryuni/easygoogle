@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-
-
-
+#
 #  Copyright 2017-2018 Luiz Augusto Alves Ferraz
 #  .
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,7 +20,7 @@ import googleapiclient.discovery
 import six
 
 
-def applyPatch():
+def apply_patch():
     original = googleapiclient.discovery.Resource._add_nested_resources
 
     @functools.wraps(original)

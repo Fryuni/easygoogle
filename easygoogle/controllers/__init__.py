@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
-
-#  Copyright 2017-2018 Luiz Augusto Alves Ferraz
+#  Copyright 2017-2019 Luiz Augusto Alves Ferraz
 #  .
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -14,24 +12,4 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-import logging
-import os
-
-from ._patch_resources import apply_patch
-from .controllers.oauth2 import oauth2
-from .controllers.service_account import service_acc
-
-__ALL__ = [
-    oauth2,
-    service_acc,
-]
-
-logger = logging.getLogger(__name__)
-
-if not os.environ.get("EASYGOOGLE_NO_AUTO_PATCH_RESOURCES"):
-    apply_patch()
-
-
-def set_default_cache(cache):
-    from .controllers import base
-    setattr(base, 'DEFAULT_CACHE', cache)
+# -*- coding: utf-8 -*-
