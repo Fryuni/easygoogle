@@ -43,7 +43,7 @@ if 'CIRCLE_TAG' in environ:
 
 setup(
     name="easygoogle",
-    packages=["easygoogle"],
+    packages=["easygoogle", "easygoogle.controllers"],
     license="Apache License 2.0",
     version=VERSION,
     description="Easy to use wrapper to google APIs client library",
