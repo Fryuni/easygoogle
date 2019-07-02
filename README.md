@@ -2,6 +2,7 @@
 [![CircleCI](https://circleci.com/gh/Fryuni/easygoogle/tree/master.svg?style=shield)](https://circleci.com/gh/Fryuni/easygoogle/tree/master)
 [![PyPiStatus](https://img.shields.io/pypi/status/easygoogle.svg)](https://pypi.org/project/easygoogle/)
 [![Coverage Status](https://coveralls.io/repos/github/Fryuni/easygoogle/badge.svg?branch=master)](https://coveralls.io/github/Fryuni/easygoogle?branch=master)
+[![GitHub](https://img.shields.io/github/license/Fryuni/easygoogle.svg)](/LICENSE)
 
 [![PyPi](https://img.shields.io/pypi/v/easygoogle.svg)](https://pypi.org/project/easygoogle/)
 [![PyPiVersions](https://img.shields.io/pypi/pyversions/google-cloud.svg)](https://pypi.org/project/easygoogle/)
