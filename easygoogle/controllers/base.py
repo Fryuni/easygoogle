@@ -33,7 +33,9 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 registeredApis = {}
-if os.path.isfile(os.path.join(os.path.dirname(__file__), 'apis.json')):
+if os.path.isfile(
+    os.path.join(os.path.dirname(os.path.dirname(__file__)), 'apis.json')
+    ):
     registeredApis = load_api_dict()
 
 
