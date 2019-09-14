@@ -12,28 +12,27 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-# -*- coding: utf-8 -*-
+import enum
 import os
-from argparse import Namespace
 
-AUTH = Namespace(
-    CONSOLE='auth-opt-1',
-    BROWSER='auth-opt-2',
-    SILENT='auth-opt-3',
-)
-AUTH_OPTS = tuple(AUTH.__dict__.values())
+
+class AUTH(enum.Enum):
+    CONSOLE = 'auth-opt-1'
+    BROWSER = 'auth-opt-2'
+    SILENT = 'auth-opt-3'
+    MANUAL = 'no-auth-handler'
 
 
 class _CONSTS(object):
 
     def __setattr__(self, arg, val):
-        raise NotImplementedError("Cannot package constants.")
+        raise NotImplementedError("Cannot change constants.")
 
     def __delattr__(self, arg):
-        raise NotImplementedError("Cannot package constants.")
+        raise NotImplementedError("Cannot change constants.")
 
     @property
-    def DEFAULT_AUTH_OPT(self):
+    def DEFAULT_AUTH_OPT(self) -> AUTH:
         return getattr(
             AUTH,
             os.environ.get(
@@ -43,36 +42,37 @@ class _CONSTS(object):
         )
 
     @property
-    def DEFAULT_APP_DIR(self):
+    def DEFAULT_APP_DIR(self) -> str:
         return os.environ.get(
             'EASYGOOGLE_DEFAULT_APP_DIR',
             '.'
         )
 
     @property
-    def DEFAULT_APP_NAME(self):
+    def DEFAULT_APP_NAME(self) -> str:
         return os.environ.get(
             'EASYGOOGLE_DEFAULT_APP_NAME',
             'Google Client Library - Python'
         )
 
     @property
-    def DEFAULT_HOSTNAME(self):
+    def DEFAULT_HOSTNAME(self) -> str:
         return os.environ.get(
             'EASYGOOGLE_DEFAULT_HOSTNAME',
             'localhost'
         )
 
     @property
-    def DEFAULT_PORT(self):
+    def DEFAULT_PORT(self) -> str:
         return os.environ.get(
             'EASYGOOGLE_DEFAULT_PORT',
             None
         )
 
     @property
-    def ENFORCE_DEFAULT_OPT(self):
+    def ENFORCE_DEFAULT_OPT(self) -> str:
         return os.environ.get('EASYGOOGLE_ENFORCE_AUTH_MODE') == 'ENFORCE'
 
 
-_CONSTS = _CONSTS()
+CONSTS = _CONSTS()
+del _CONSTS
