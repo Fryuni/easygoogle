@@ -12,5 +12,5 @@ python -m easygoogle.config
 pip install -IU twine wheel
 
 python setup.py sdist
-python setup.py bdist_wheel --universal
+python setup.py bdist_wheel --python-tag py3.6
 python -m twine upload dist/*
