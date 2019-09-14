@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-#
-#  Copyright 2017-2018 Luiz Augusto Alves Ferraz
+
+#  Copyright 2017-2019 Luiz Augusto Alves Ferraz
 #  .
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -14,15 +14,19 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
+#
 import functools
 
 import googleapiclient.discovery
 import six
 
 
-def apply_patch():
+def apply_patch_resources():
     original = googleapiclient.discovery.Resource._add_nested_resources
+    if getattr(original, '__patched'):
+        return
 
+    # noinspection PyPep8Naming
     @functools.wraps(original)
     def _add_nested_resources(self, resourceDesc, rootDesc, schema):
         # Add in nested resources
@@ -57,6 +61,8 @@ def apply_patch():
                     methodName, methodDesc)
                 self._set_dynamic_attr(fixedMethodName, method)
 
+    _add_nested_resources.__patched = True
+
     def call(self):
         return self
 
@@ -68,3 +74,7 @@ def apply_patch():
         googleapiclient.discovery.Resource,
         '__call__', call
     )
+
+
+def apply_patch():
+    apply_patch_resources()
