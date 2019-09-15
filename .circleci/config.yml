@@ -14,11 +14,11 @@ jobs:
           command: |
             pipenv sync --dev
 
-      - run:
-          name: Setup Code Climate test-reporter
-          command: |
-            curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
-            chmod +x ./cc-test-reporter
+      #      - run:
+      #          name: Setup Code Climate test-reporter
+      #          command: |
+      #            curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+      #            chmod +x ./cc-test-reporter
 
       # Prepare environment for test
       - run:
@@ -28,14 +28,14 @@ jobs:
             pipenv run python setup.py install
 
       # run tests!
-      - run:
-          name: run tests on package
-          command: |
-            ./cc-test-reporter env
-            ./cc-test-reporter before-build
-            pipenv run python -m pytest --cov=easygoogle --cov-append --cov-config=.coveragerc --cov-report term --cov-report xml -v tests/
-            # pipenv run coveralls
-            ./cc-test-reporter after-build --exit-code $? --coverage-input-type "coverage.py"
+      #      - run:
+      #          name: run tests on package
+      #          command: |
+      #            ./cc-test-reporter env
+      #            ./cc-test-reporter before-build
+      #            pipenv run python -m pytest --cov=easygoogle --cov-append --cov-config=.coveragerc --cov-report term --cov-report xml -v tests/
+      #            # pipenv run coveralls
+      #            ./cc-test-reporter after-build --exit-code $? --coverage-input-type "coverage.py"
 
       - run:
           name: Push to PyPi (if is tag)
