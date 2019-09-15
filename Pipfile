@@ -7,12 +7,14 @@ name = "pypi"
 google-api-python-client = "*"
 google-auth = "*"
 google-auth-oauthlib = "*"
+pickledb = "*"
 
 [dev-packages]
 pytest = "*"
 pytest-cov = "*"
 pytest-mock = "*"
 # python-coveralls = "*"
+# google-apitools = {extras = ["cli"],version = "*"}
 
 [requires]
 python_version = "3.7"

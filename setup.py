@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#  Copyright 2017-2018 Luiz Augusto Alves Ferraz
+#  Copyright 2017-2019 Luiz Augusto Alves Ferraz
 #  .
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -16,8 +16,12 @@
 #  limitations under the License.
 
 from os import environ
+from pathlib import Path
 
 from setuptools import setup
+
+setup_folder: Path = Path(__file__).resolve().parent
+readme_path = setup_folder.joinpath("README.md")
 
 VERSION = environ.get('CIRCLE_TAG', '0.0.0.dev1')
 DOWNLOAD_URL = None
@@ -47,24 +51,25 @@ setup(
     license="Apache License 2.0",
     version=VERSION,
     description="Easy to use wrapper to google APIs client library",
-    package_data={
-        'easygoogle': ['apis.json']
-    },
+    long_description=readme_path.read_text(),
+    # package_data={
+    #     'easygoogle': ['apis.json']
+    # },
     author="Luiz Augusto Ferraz",
     author_email="luiz@lferraz.com",
     install_requires=[
-        "google-api-python-client (~=1.7.10)",
+        "google-api-python-client (~=1.7.11)",
         'google-auth (~=1.6.3)',
         'google-auth-oauthlib (~=0.4.0)',
     ],
     url="https://github.com/Fryuni/easygoogle",
     download_url=DOWNLOAD_URL,
     keywords="google apis google-apis",
-    entry_points={
-        'console_scripts': [
-            'easygoogle_refreshapis=easygoogle.config:main',
-        ],
-    },
+    # entry_points={
+    #     'console_scripts': [
+    #         'easygoogle_refreshapis=easygoogle.config:main',
+    #     ],
+    # },
     classifiers=["Development Status :: 5 - Production/Stable",
                  "Intended Audience :: Developers",
                  "Intended Audience :: Education",

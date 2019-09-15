@@ -13,9 +13,10 @@
 #  limitations under the License.
 
 import json
+import logging
 import os
 
-from easygoogle.config import logger
+logger = logging.getLogger(__name__)
 
 
 def get_all_apis(discovery_api):
