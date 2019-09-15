@@ -34,10 +34,10 @@ if 'CIRCLE_TAG' in environ:
     DOWNLOAD_URL = 'https://github.com/Fryuni/easygoogle/archive/%s.tar.gz' % VERSION
 
     match = re.match(
-        r'^([a-z]+)-([0-9]+)\.([0-9]+)\.([0-9]+[ab]?[0-9]*)$', VERSION
+        r'^([a-z]+)-([0-9]+)\.([0-9]+)\.([0-9]+(?:[ab]|dev)?[0-9]*)$', VERSION
     )
     if match:
-        VERSION = '.'.join(str(int(p)) for p in match.groups()[1:])
+        VERSION = '.'.join(match.groups()[1:])
         DIST_TYPE = match.group(1)
     else:
         exit("Invalid CIRCLE_TAG environment variable")
