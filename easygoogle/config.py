@@ -1,4 +1,4 @@
-#  Copyright 2017-2018 Luiz Augusto Alves Ferraz
+#  Copyright 2017-2019 Luiz Augusto Alves Ferraz
 #  .
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -19,66 +19,90 @@ import os
 from json import dump
 from os.path import dirname, join
 
-import googleapiclient.discovery
-
-try:
-    import progressbar
-except ImportError:
-    progressbar = None
-
-if progressbar is not None:
-    progressbar.streams.wrap_stderr()
+from googleapiclient.discovery import build
 
 logger = logging.getLogger(__name__)
 
 
+def get_all_apis(discovery_api):
+    apis_res = discovery_api.apis()
+    get_page = apis_res.list(
+        fields='items(name,title,version,preferred)',
+    )
+
+    if not hasattr(apis_res, 'list_next'):
+        return get_page.execute()['items']
+
+    # If Google decides to paginate the global discovery endpoint
+    result = []
+    while get_page:
+        page = get_page.execute()
+        result.extend(page.get('items', tuple()))
+        get_page = apis_res.list_next(
+            previous_request=get_page,
+            previous_response=page,
+        )
+    return result
+
+
+def build_api_dict(discovery, api_list):
+    def parse_rest_definition(api):
+        def parser(idp, response, exception):
+            if exception:
+                logger.warning(
+                    "Could not acquire openapi document for api '%s' version '%s'",
+                    api['name'], api['version']
+                )
+                return
+            if 'auth' not in response:
+                return
+
+            for scope in response['auth']['oauth2']['scopes'].keys():
+                name = scope.strip('/').split('/')[-1]
+
+                logger.info("Configuring scope \"%s\" for \"%s\"...",
+                            name, api['title'])
+
+                # If scope already registered, link to new API
+                if name in apis:
+                    apis[name]['apis'].append(api)
+
+                # Else, register scope and link to API
+                else:
+                    apis[name] = {'apis': [api], 'scope': scope}
+
+        return parser
+
+    apis = {}
+
+    apis_res = discovery.apis()
+
+    for cut in range(0, len(api_list), 50):
+        batch = discovery.new_batch_http_request()
+        for api_item in api_list[cut:cut + 50]:
+            batch.add(
+                apis_res.getRest(
+                    api=api_item['name'],
+                    version=api_item['version'],
+                    fields='auth',
+                ),
+                callback=parse_rest_definition(api_item)
+            )
+            batch.execute()
+
+    return apis
+
+
 # Configure valid apis and scopes from Google Discovery Documentation
-def config(progress=False):  # pragma: no cover
-    discoveryapi = googleapiclient.discovery.build(
+def config():
+    discovery = build(
         'discovery',
         'v1',
         cache_discovery=False,
     )
-    apisres = discoveryapi.apis()
-    allapis = apisres.list(
-        fields='items(name,title,version,preferred)'
-    ).execute()
-    apis = dict()
+    api_list = get_all_apis(discovery)
 
-    if progress and progressbar is not None:
-        iterator = progressbar.progressbar(
-            allapis['items'], prefix="Looking up APIs",
-            redirect_stdout=True, redirect_stderr=True,
-        )
-    else:
-        iterator = allapis['items']
-
-    for api in iterator:
-        try:
-            apiinfo = apisres.getRest(api=api['name'], version=api['version'],
-                                      fields='auth').execute()
-        except Exception as e:
-            logger.warning(
-                "Could not acquire openapi document for api '%s' version '%s'",
-                api['name'], api['version']
-            )
-
-        if 'auth' not in apiinfo:
-            continue
-
-        for scope in apiinfo['auth']['oauth2']['scopes'].keys():
-            name = scope.strip('/').split('/')[-1]
-
-            logger.info("Configuring scope \"%s\" for \"%s\"...",
-                        name, api['title'])
-
-            # If scope already registered, link to new API
-            if name in apis:
-                apis[name]['apis'].append(api)
-
-                # Else, register scope and link to API
-            else:
-                apis[name] = {'apis': [api], 'scope': scope}
+    apis = build_api_dict(discovery, api_list)
 
     # Save result configuration to json save file
     with open(join(dirname(__file__), 'apis.json'), 'w') as fl:
@@ -90,8 +114,12 @@ def config(progress=False):  # pragma: no cover
 # Load APIs versions, identifiers and scopes relations
 # from json file
 def load_api_dict():
-    with open(os.path.join(os.path.dirname(__file__), 'apis.json'), 'r') as fl:
-        return json.load(fl)
+    file_path = os.path.join(os.path.dirname(__file__), 'apis.json')
+    if os.path.isfile(file_path):
+        with open(file_path, 'r') as fl:
+            return json.load(fl)
+    else:
+        return {}
 
 
 def main():
@@ -102,7 +130,7 @@ def main():
     )
 
     # Start configuration
-    config(True)
+    config()
 
 
 if __name__ == "__main__":
