@@ -18,7 +18,7 @@
 from os import environ
 from pathlib import Path
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup_folder: Path = Path(__file__).resolve().parent
 readme_path = setup_folder.joinpath("README.md")
@@ -47,7 +47,7 @@ if 'CIRCLE_TAG' in environ:
 
 setup(
     name="easygoogle",
-    packages=["easygoogle", "easygoogle.controllers"],
+    packages=find_packages(exclude=['tests']),
     license="Apache License 2.0",
     version=VERSION,
     description="Easy to use wrapper to google APIs client library",
