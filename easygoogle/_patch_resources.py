@@ -23,7 +23,7 @@ import six
 
 def apply_patch_resources():
     original = googleapiclient.discovery.Resource._add_nested_resources
-    if getattr(original, '__patched'):
+    if getattr(original, '__patched', False):
         return
 
     # noinspection PyPep8Naming
