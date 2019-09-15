@@ -52,6 +52,7 @@ setup(
     version=VERSION,
     description="Easy to use wrapper to google APIs client library",
     long_description=readme_path.read_text(),
+    long_description_content_type='text/markdown',
     # package_data={
     #     'easygoogle': ['apis.json']
     # },
