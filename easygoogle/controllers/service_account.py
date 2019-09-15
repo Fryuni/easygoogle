@@ -15,47 +15,56 @@
 #  limitations under the License.
 
 import logging
+import warnings
+from typing import List, Optional, Union
 
 import google.auth
 from google.oauth2.service_account import Credentials
-import six
 
-from .base import _api_builder
+from .base import _ApiBuilder
+from ..config.scope_scrap import get_scopes_short_map
 
 logger = logging.getLogger(__name__)
+_deprecation_dummy = object()
 
 
-class service_acc(_api_builder):
-    # Handler for service account authentication
+class ServiceAccount(_ApiBuilder):
+    """Handler for service account authentication."""
 
-    # Instantiate handler
+    # noinspection PyPep8Naming
     def __init__(self,
-                 service_file,
-                 scopes,
-                 manualScopes=[],
-                 domainWide=True,
+                 service_file: Optional[Union[str, dict]],
+                 scopes: List[str],
+                 domainWide: bool = _deprecation_dummy,
                  *args,
                  **kwargs):
+        super(ServiceAccount, self).__init__(*args, **kwargs)
 
-        # Load valid APIs unlocked with the scopes
-        self._loadApiNames(scopes)
+        if domainWide is not _deprecation_dummy:
+            warnings.warn(
+                message=(
+                    'The parameter "domainWide" is deprecated and not enforced when '
+                    'creating delegated credentials controllers. APIs calls may fail '
+                    'to authenticate depending on domain-wide configuration on GCP Console'
+                ),
+                category=DeprecationWarning,
+            )
 
         # Save all scopes results
-        self.SCOPES = list(
-            set([x['scope'] for x in self.apis.values()] + manualScopes))
+        self.SCOPES = list({
+            get_scopes_short_map().get(scope, scope)
+            for scope in scopes
+        })
 
-        # Set domain wide delegation flag
-        self.__domWide = domainWide
-
-        # Acquire credentials from JSON keyfile
+        # Acquire credentials from JSON key file
         if service_file is not None:
-            if isinstance(service_file, six.string_types):
-                self._credentials = Credentials.from_service_account_file(
+            if isinstance(service_file, dict):
+                self._credentials = Credentials.from_service_account_info(
                     service_file,
                     scopes=self.SCOPES,
                 )
             else:
-                self._credentials = Credentials.from_service_account_info(
+                self._credentials = Credentials.from_service_account_file(
                     service_file,
                     scopes=self.SCOPES,
                 )
@@ -66,32 +75,23 @@ class service_acc(_api_builder):
         logger.debug("Credentials acquired")
 
     @property
-    def credentials(self):
+    def credentials(self) -> Credentials:
         return self._credentials
 
     @classmethod
-    def default(cls, scopes=['cloud-platform'], **kwargs):
+    def default(cls, scopes=('cloud-platform',), **kwargs):
         return cls(None, scopes, **kwargs)
 
-    # Delegate authorization using application impersonation of authority
     def delegate(self, user):
-        # Proceed only if domain wide delegation flag was setted to True
-        if self.__domWide:
-            # Instantiate delegated handler
-            res = _delegated(
-                self.credentials.with_subject(user), self.valid_apis)
-            logger.info("Created delegated credentials")
-            return res
-        else:
-            logger.warning("Domain Wide Delegation disabled")
-            return self
-
-    @property
-    def domain_wide(self):
-        return self.__domWide
+        """Delegate authorization using application impersonation of authority."""
+        # Instantiate delegated handler
+        res = _delegated(
+            self.credentials.with_subject(user), self.valid_apis)
+        logger.info("Created delegated credentials")
+        return res
 
 
-class _delegated(_api_builder):
+class _delegated(_ApiBuilder):
     # Delegated class, created from service account application impersonation
     def __init__(self, dCredentials, apis):
         self.valid_apis = apis

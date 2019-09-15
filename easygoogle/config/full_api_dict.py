@@ -11,17 +11,11 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-#
-# -*- coding: utf-8 -*-
+
 import json
-import logging
 import os
-from json import dump
-from os.path import dirname, join
 
-from googleapiclient.discovery import build
-
-logger = logging.getLogger(__name__)
+from easygoogle.config import logger
 
 
 def get_all_apis(discovery_api):
@@ -93,26 +87,6 @@ def build_api_dict(discovery, api_list):
     return apis
 
 
-# Configure valid apis and scopes from Google Discovery Documentation
-def config():
-    discovery = build(
-        'discovery',
-        'v1',
-        cache_discovery=False,
-    )
-    api_list = get_all_apis(discovery)
-
-    apis = build_api_dict(discovery, api_list)
-
-    # Save result configuration to json save file
-    with open(join(dirname(__file__), 'apis.json'), 'w') as fl:
-        dump(apis, fl)
-
-        return apis
-
-
-# Load APIs versions, identifiers and scopes relations
-# from json file
 def load_api_dict():
     file_path = os.path.join(os.path.dirname(__file__), 'apis.json')
     if os.path.isfile(file_path):
@@ -120,18 +94,3 @@ def load_api_dict():
             return json.load(fl)
     else:
         return {}
-
-
-def main():
-    # Instantiate basic logging
-    logging.basicConfig(
-        level=logging.INFO,
-        format="[%(name)-20s][%(levelname)-8s]:%(asctime)s: %(message)s",
-    )
-
-    # Start configuration
-    config()
-
-
-if __name__ == "__main__":
-    main()

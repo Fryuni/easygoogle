@@ -14,9 +14,10 @@
 
 import enum
 import os
+import platform
 
 
-class AUTH(enum.Enum):
+class Auth(enum.Enum):
     CONSOLE = 'auth-opt-1'
     BROWSER = 'auth-opt-2'
     SILENT = 'auth-opt-3'
@@ -32,9 +33,9 @@ class _CONSTS(object):
         raise NotImplementedError("Cannot change constants.")
 
     @property
-    def DEFAULT_AUTH_OPT(self) -> AUTH:
+    def DEFAULT_AUTH_OPT(self) -> Auth:
         return getattr(
-            AUTH,
+            Auth,
             os.environ.get(
                 'EASYGOOGLE_DEFAULT_MODE',
                 'BROWSER'
@@ -45,7 +46,9 @@ class _CONSTS(object):
     def DEFAULT_APP_DIR(self) -> str:
         return os.environ.get(
             'EASYGOOGLE_DEFAULT_APP_DIR',
-            '.'
+            os.path.expandvars(r"%APPDATA%\easygoogle")
+            if platform.system() == "Windows" else
+            os.path.expanduser("~/.local/share")
         )
 
     @property

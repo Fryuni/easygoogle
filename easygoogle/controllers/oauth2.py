@@ -16,118 +16,95 @@
 
 import json
 import logging
-import os
+from os import PathLike
+from pathlib import Path
+from typing import List, Optional, Union
 
-import google.auth
-import google.oauth2
-import six
+from google.auth import default as default_auth
+from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 
-from .base import _api_builder
-from ..constants import AUTH, AUTH_OPTS, _CONSTS
+from .base import _ApiBuilder
+from ..config.scope_scrap import get_scopes_short_map
+from ..constants import Auth, CONSTS
+from ..credentials_storage.base import BaseStorage
 
 logger = logging.getLogger(__name__)
 
 
-class oauth2(_api_builder):
+# noinspection PyPep8Naming,SpellCheckingInspection
+class oauth2(_ApiBuilder):
     # OAuth2 class
     # Handles API connector building, configuration of avaiable API and OAuth2 authentication flow
 
     # Main constructor function
     def __init__(self,
-                 client_secrets,
-                 scopes,
-                 appname=_CONSTS.DEFAULT_APP_NAME,
-                 user="",
-                 app_dir=_CONSTS.DEFAULT_APP_DIR,
-                 manualScopes=[],
-                 hostname=_CONSTS.DEFAULT_HOSTNAME,
-                 port=_CONSTS.DEFAULT_PORT,
-                 auth_mode=_CONSTS.DEFAULT_AUTH_OPT):
-        assert auth_mode in AUTH_OPTS
-        if _CONSTS.ENFORCE_DEFAULT_OPT and auth_mode != _CONSTS.DEFAULT_AUTH_OPT:  # pragma: no cover
-            logger.warning('Auth mode is enforced by environment, ignoring argument\n')
+                 client_secrets: Optional[Union[str, PathLike]],
+                 scopes: List[str],
+                 appname: str = CONSTS.DEFAULT_APP_NAME,
+                 user: str = "default_user",
+                 credentials_store: BaseStorage = None,
+                 hostname: str = CONSTS.DEFAULT_HOSTNAME,
+                 port: int = CONSTS.DEFAULT_PORT,
+                 auth_mode: Union[Auth, str] = CONSTS.DEFAULT_AUTH_OPT):
+        if isinstance(auth_mode, (str, int)):
+            auth_mode = Auth(str)
+        elif not isinstance(auth_mode, Auth):
+            raise ValueError(f'"auth_mode" must be a value from easygoogle.constants.Auth')
 
-        # Load valid APIs unlocked with the scopes
-        self._loadApiNames(scopes)
+        if CONSTS.ENFORCE_DEFAULT_OPT and auth_mode != CONSTS.DEFAULT_AUTH_OPT:  # pragma: no cover
+            logger.warning('Auth mode is enforced by environment, ignoring argument\n')
+            auth_mode = CONSTS.DEFAULT_AUTH_OPT
 
         # Save all scopes results
-        self.SCOPES = list(
-            set([x['scope'] for x in self.apis.values()] + manualScopes))
+        self.SCOPES = list({
+            get_scopes_short_map().get(scope, scope)
+            for scope in scopes
+        })
 
-        # App information
-        home_dir = os.path.abspath(os.path.expanduser(app_dir))
-
+        self.credentials_store: BaseStorage = credentials_store
         self.__auth_hostname = hostname
         self.__auth_port = port
         self.__auth_mode = auth_mode
+        self._appname = appname
+        self._user = user
+        self._credentials: Optional[Credentials] = None
+        self.projectId: Optional[str] = None
 
-        if client_secrets == None:
-            self._credentials, self.projectId = google.auth.default()
+        if auth_mode is Auth.MANUAL:
+            return
+
+        if client_secrets is None:
+            self._credentials, self.projectId = default_auth()
         else:
-            self.__acquireCredentials(client_secrets, home_dir, appname, user)
+            self.__acquireCredentials(client_secrets, user)
 
-    def __acquireCredentials(self, client_secrets, home_dir, appname, user):
-        # Path to credentials files directory
-        self.credential_dir = os.path.join(home_dir, '.credentials')
-        # Create credentials directory if not exists
-        if not os.path.isdir(self.credential_dir):
-            os.makedirs(self.credential_dir)
+    def __acquireCredentials(self, client_secrets: Union[str, PathLike, dict], user: str):
+        if not isinstance(client_secrets, dict):
+            client_secrets = json.load(Path(client_secrets).open('r'))
+        if self.credentials_store:
+            self._credentials = self.credentials_store.get(
+                client_id=client_secrets['client_id'],
+                user=user,
+            )
 
-        # Save app name
-        self.name = appname
+        if (not self._credentials
+                or not set(self.SCOPES).issubset(set(self._credentials.scopes))):
+            self._credentials = self.__runAuthenticationFlow(client_secrets)
+            if self.credentials_store:
+                self.credentials_store.save(
+                    client_id=client_secrets['client_id'],
+                    user=user,
+                    credentials=self._credentials,
+                )
 
-        # Construct file name
-        self.filename = ''.join(
-            e for e in self.name if e.isalnum() or e in ' _-'
-        ).lower().replace(
-            ' ', '_'
-        ) + '#' + user + ".json"
-
-        # Assemble full credential file path
-        self.credential_path = os.path.join(self.credential_dir,
-                                            self.filename)
-
-        # Load saved credentials if the file exists
-        if os.path.isfile(self.credential_path):
-            saved_state = self.__loadStateFromFile(self.credential_path)
-        else:
-            saved_state = None
-
-        if saved_state is None:
-            credentials = self.__runAuthenticationFlow(client_secrets)
-        else:
-            credentials = self.__credentialsFromSavedState(saved_state)
-        self._credentials = credentials
-
-    def __loadStateFromFile(self, credential_path):
-        saved_state = json.load(open(credential_path))
-        saved_scopes = set(saved_state['scopes'])
-        cur_scopes = set(self.SCOPES)
-        if len(cur_scopes.difference(saved_scopes)) > 0:
-            self.scopes = list(saved_scopes.union(cur_scopes))
-            saved_state = None
-        return saved_state
-
-    def __credentialsFromSavedState(self, saved_state):
-        credentials = google.oauth2 \
-            .credentials.Credentials(None, **saved_state)
-        credentials.refresh(
-            google.auth.transport.requests.Request(),
-        )
-        return credentials
-
-    def __runAuthenticationFlow(self, client_secrets):
+    def __runAuthenticationFlow(self, client_info) -> Credentials:
         # No valid credentials found
         # Instantiate authrization flow
-        if isinstance(client_secrets, six.string_types):
-            flow = InstalledAppFlow.from_client_secrets_file(
-                client_secrets, scopes=self.SCOPES
-            )
-        else:
-            flow = InstalledAppFlow.from_client_config(
-                client_secrets, scopes=self.SCOPES,
-            )
+        flow = InstalledAppFlow.from_client_config(
+            client_info, scopes=self.SCOPES,
+        )
 
         # Start web server to authorize application
         if self.__auth_port is None:
@@ -137,35 +114,24 @@ class oauth2(_api_builder):
             _, self.__auth_port = tcp.getsockname()
             tcp.close()
 
-        if self.__auth_mode == AUTH.CONSOLE:
+        if self.__auth_mode == Auth.CONSOLE:
             credentials = flow.run_console()
         else:
             credentials = flow.run_local_server(
                 host=self.__auth_hostname,
                 port=self.__auth_port,
-                open_browser=self.__auth_mode == AUTH.BROWSER,
+                open_browser=self.__auth_mode == Auth.BROWSER,
             )
-        credentials.refresh(
-            google.auth.transport.requests.Request(
-                session=flow.authorized_session(),
-            ),
-        )
-
-        saved_state = {
-            'refresh_token': credentials.refresh_token,
-            'client_id': credentials.client_id,
-            'client_secret': credentials.client_secret,
-            'token_uri': credentials.token_uri,
-            'id_token': credentials.id_token,
-            'scopes': list(credentials.scopes),
-        }
-
-        json.dump(saved_state, open(self.credential_path, 'w'))
+        credentials.refresh(Request(session=flow.authorized_session()))
         return credentials
 
     @property
-    def credentials(self):
+    def credentials(self) -> Optional[Credentials]:
         return self._credentials
+
+    @credentials.setter
+    def credentials(self, new_credentials: Credentials):
+        self._credentials = new_credentials
 
     @classmethod
     def default(cls):

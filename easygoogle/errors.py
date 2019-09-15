@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 #  Copyright 2017-2019 Luiz Augusto Alves Ferraz
 #  .
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,24 +12,23 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-import logging
-import os
 
-from ._patch_resources import apply_patch
-from .controllers.oauth2 import oauth2
-from .controllers.service_account import ServiceAccount
-
-__ALL__ = [
-    oauth2,
-    ServiceAccount,
-]
-
-logger = logging.getLogger(__name__)
-
-if not os.environ.get("EASYGOOGLE_NO_AUTO_PATCH_RESOURCES"):
-    apply_patch()
+class EasygoogleError(Exception):
+    pass
 
 
-def set_default_cache(cache):
-    from .controllers import base
-    setattr(base, 'DEFAULT_CACHE', cache)
+class UnknownPreferredVersion(EasygoogleError):
+    def __init__(self, api):
+        super(UnknownPreferredVersion, self).__init__(api)
+        self.api = api
+
+    def __str__(self):
+        return f'Could not determine preferred version for api "{self.api}"'
+
+
+class UncertainPreferredVersion(UnknownPreferredVersion):
+    def __str__(self):
+        return (
+            f'The api "{self.api}" has multiple preferred versions, probably it an api macro group. '
+            'In this situation it is mandatory to specify a version.'
+        )

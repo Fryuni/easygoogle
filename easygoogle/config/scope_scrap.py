@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 #  Copyright 2017-2019 Luiz Augusto Alves Ferraz
 #  .
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,24 +12,27 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-import logging
-import os
+import re
 
-from ._patch_resources import apply_patch
-from .controllers.oauth2 import oauth2
-from .controllers.service_account import ServiceAccount
+import requests
 
-__ALL__ = [
-    oauth2,
-    ServiceAccount,
-]
-
-logger = logging.getLogger(__name__)
-
-if not os.environ.get("EASYGOOGLE_NO_AUTO_PATCH_RESOURCES"):
-    apply_patch()
+__scopes_short_map = None
 
 
-def set_default_cache(cache):
-    from .controllers import base
-    setattr(base, 'DEFAULT_CACHE', cache)
+def get_scopes_short_map():
+    global __scopes_short_map
+    if __scopes_short_map is None:
+        with requests.get("https://developers.google.com/identity/protocols/googlescopes") as res:
+            data = res.text
+        rgx = re.compile(r"<tr>\s*<td>(https://[\w./\-\d]+?) ?</td")
+
+        scopes = [
+            match.group(1)
+            for match in rgx.finditer(data)
+        ]
+
+        __scopes_short_map = {
+            scope.rsplit('/', 1)[-1]: scope
+            for scope in scopes
+        }
+    return __scopes_short_map

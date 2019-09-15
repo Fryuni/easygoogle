@@ -16,35 +16,36 @@
 import abc
 import logging
 import os
+import warnings
+from typing import Dict
 
+from cachetools import LFUCache
+from google.auth.credentials import Credentials
 from googleapiclient.discovery import build
-import six
 
-from ..config import load_api_dict
-
-try:
-    # Try to import appengine memcache as the default cache option
-    from google.appengine.api import memcache as DEFAULT_CACHE
-except ImportError:
-    from cachetools import LFUCache as DEFAULT_CACHE
-
-    DEFAULT_CACHE = DEFAULT_CACHE(20)
+from easygoogle.config.full_api_dict import load_api_dict
+from ..errors import UnknownPreferredVersion, UncertainPreferredVersion
 
 logger = logging.getLogger(__name__)
 
-registeredApis = {}
-if os.path.isfile(
-    os.path.join(os.path.dirname(os.path.dirname(__file__)), 'apis.json')
-    ):
-    registeredApis = load_api_dict()
+DEFAULT_CACHE = LFUCache(20)
 
 
-@six.add_metaclass(abc.ABCMeta)
-class _api_builder(object):
+class _ApiBuilder(metaclass=abc.ABCMeta):
     # Base class, loads API information and build the connectors with the credentials
+
+    _preferred_version_cache: Dict[str, str] = {}
+    _discovery = None
+    _credentials: Credentials
 
     # Internal function to load all avaiable APIs based on the scopes
     def _loadApiNames(self, scopes):
+
+        warnings.warn(
+            message="The api loading method is deprecated and will not work in future versions of easygoogle.",
+            category=DeprecationWarning,
+        )
+
         # Create a new dictionary to hold the information
         apiset = dict()
 
@@ -52,7 +53,7 @@ class _api_builder(object):
         for x in list(set(scopes)):
             try:
                 # Load scope relations descriptor
-                apiset[x] = registeredApis[x]
+                apiset[x] = _get_registered_apis()[x]
             except KeyError:
                 # Log when scope not found
                 logger.warning("[!] SCOPE %s not registered" % x)
@@ -90,23 +91,50 @@ class _api_builder(object):
 
     # Function to build connector based on API identifiers
     def get_api(self, api, version=None, cache=None):
-
         if cache is None:
             cache = DEFAULT_CACHE
 
-        # Build connector if API identifier is valid
-        if api in self.valid_apis:
-            if version is None:
-                version = self.valid_apis[api][1][-1]
-            res = build(
-                self.valid_apis[api][0],
-                version,
-                credentials=self._credentials,
-                cache_discovery=cache is not None,
-                cache=cache,
-            )
-            logger.info("%s API Generated" % api)
-            return res
+        if version is None:
+            version = self.get_preferred_version(api)
+        res = build(
+            api,
+            version,
+            credentials=self._credentials,
+            cache_discovery=cache is not None,
+            cache=cache,
+        )
+        logger.info("%s API Generated" % api)
+        return res
+
+    @classmethod
+    def get_preferred_version(cls, api):
+        if api not in cls._preferred_version_cache:
+            discovery = cls.get_discovery()
+            apis_res = discovery.apis()
+            res = apis_res.list(name=api, preferred=True).execute()
+            items = res.get('items', [])
+            if len(items) == 0:
+                raise UnknownPreferredVersion(api)
+            if len(items) > 1:
+                raise UncertainPreferredVersion(api)
+            cls._preferred_version_cache[api] = items[0]['version']
+        return cls._preferred_version_cache[api]
+
+    @classmethod
+    def get_discovery(cls):
+        if cls._discovery is None:
+            cls._discovery = build('discovery', 'v1', cache=DEFAULT_CACHE)
+        return cls._discovery
+
+
+def _get_registered_apis():
+    global __registered_apis
+    if __registered_apis is None:
+        if os.path.isfile(os.path.join(os.path.dirname(__file__), 'apis.json')):
+            __registered_apis = load_api_dict()
         else:
-            logger.warning("%s is not a valid API" % api)
-            raise ValueError("Invalid API identifier")
+            __registered_apis = {}
+    return __registered_apis
+
+
+__registered_apis = None
